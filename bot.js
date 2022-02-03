@@ -30,6 +30,10 @@ client.on('messageCreate', (msg) => {
     }
 
     var backfire = false;
+
+    var shootMessage = faceEmotes[randomFaceIndex()];
+    var tagMessage = "";
+
     msg.mentions.members.forEach( mentionedMember => {
         if (mentionedMember.roles.cache.has(benRoleId) || mentionedMember.roles.cache.has(gunRoleId)) {
             if (!msg.member.roles.cache.has(benRoleId)) {
@@ -40,15 +44,22 @@ client.on('messageCreate', (msg) => {
                 return;
             }
         } else {
-            msg.channel.send("<@" + mentionedMember.id + ">");
+            if (tagMessage != "") {
+                tagMessage += " ";
+            }
+            tagMessage += "<@" + mentionedMember.id + ">";
             mentionedMember.timeout(timeoutDuration);
         }
     });
-    if (backfire || timeoutDuration > 20 * 1000) {
-        msg.channel.send(gunEmote + faceEmotes[randomFaceIndex()] + gunEmote2);
-    } else {
-        msg.channel.send(gunEmote + faceEmotes[randomFaceIndex()]);
+    for (let i = 0; i < msg.mentions.members.size; i++) {
+        shootMessage = gunEmote + shootMessage;
+
+        if (backfire || timeoutDuration > 20 * 1000) {
+            shootMessage = shootMessage + gunEmote2;
+        }
     }
+    msg.channel.send(tagMessage);
+    msg.channel.send(shootMessage);
 });
 
 function randomFaceIndex() {
