@@ -19,18 +19,13 @@ client.on('messageCreate', (msg) => {
 
     if (msg.content.substring(1, 6) == "shoot") {
         msg.mentions.members.forEach( mentionedMember => {
-            // if (mentionedMember.moderatable) {
-            // msg.channel.send("<@" + mentionedMember.id + ">");
+            msg.channel.send("<@" + mentionedMember.id + ">");
             mentionedMember.timeout(15 * 1000);
-            // } else if (msg.author.moderatable) {
-            //     msg.channel.send(mentionedMember.displayName + " cannot be killed. Killing <@" + author.id + ">");
-            //     author.timeout(10 * 1000);
-            // }
         });
         msg.channel.send(gunEmote + faceEmotes[randomFaceIndex()]);
     } else if (msg.content.substring(1, 5) == "kill") {
         msg.mentions.members.forEach( mentionedMember => {
-            // msg.channel.send("<@" + mentionedMember.id + ">");
+            msg.channel.send("<@" + mentionedMember.id + ">");
             mentionedMember.timeout(60 * 1000, "bye");
         });
         msg.channel.send(gunEmote + faceEmotes[randomFaceIndex()] + gunEmote2);
