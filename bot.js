@@ -16,7 +16,7 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', (msg) => {
-    if (!msg.content.charAt(0) == '~') {
+    if (!msg.content.charAt(0) == '~' || msg.mentions.members.size === 0) {
         return;
     }
 
