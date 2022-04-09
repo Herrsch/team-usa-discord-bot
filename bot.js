@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
 const client = new Discord.Client({
-    intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES"]
+    intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"]
 });
 const auth = require('./auth.json');
 
@@ -60,6 +60,12 @@ client.on('messageCreate', (msg) => {
     }
     msg.channel.send(tagMessage);
     msg.channel.send(shootMessage);
+});
+
+client.on('voiceStateUpdate', (oldState, newState) => {
+    if (newState.streaming) {
+        client.channels.cache.find(channel => channel.name === "general").send(newState.member.displayName + " has gone live!");
+    }
 });
 
 function randomFaceIndex() {
