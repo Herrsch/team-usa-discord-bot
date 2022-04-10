@@ -63,7 +63,7 @@ client.on('messageCreate', (msg) => {
 });
 
 client.on('voiceStateUpdate', (oldState, newState) => {
-    if (newState.streaming) {
+    if (newState.streaming && newState.channel != null) {
         client.channels.cache.find(channel => channel.name === "general").send(newState.member.displayName + " has gone live!");
     }
 });
