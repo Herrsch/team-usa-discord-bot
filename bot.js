@@ -66,7 +66,7 @@ client.on('messageCreate', (msg) => {
 
     var shootMessage = faceEmotes[randomFaceIndex()];
     var tagMessage = "";
-    
+
     msg.mentions.members.forEach( mentionedMember => {
         if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId) {
           if (msg.member.id != benUserId) {
