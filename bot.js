@@ -41,8 +41,8 @@ const faceEmotes = [
      "<:stung:967970671797887016>"
 ];
 
-const gunRoleId = "938569783320916019";
-const benRoleId = "788523219736985631";
+const gunUserId = "938529523811627038";
+const benUserId = "410621256140980225";
 
 client.on('ready', () => {
  console.log('Logged in!');
@@ -66,12 +66,12 @@ client.on('messageCreate', (msg) => {
 
     var shootMessage = faceEmotes[randomFaceIndex()];
     var tagMessage = "";
-
+    
     msg.mentions.members.forEach( mentionedMember => {
-        if (mentionedMember.roles.cache.has(benRoleId) || mentionedMember.roles.cache.has(gunRoleId)) {
-            if (!msg.member.roles.cache.has(benRoleId)) {
+        if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId) {
+          if (msg.member.id != benUserId) {
                 msg.member.timeout(timeoutDuration * 2);
-                msg.channel.send("<@" + msg.author.id + "> you have made a grave mistake");
+                tagMessage = "<@" + msg.member.id + ">";
                 backfire = true;
             } else {
                 return;
