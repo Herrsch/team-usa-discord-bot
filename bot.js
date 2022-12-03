@@ -142,14 +142,14 @@ client.on('messageCreate', async (msg) => {
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (newState.streaming && newState.channel != null && !oldState.streaming) {
         const currentTimestamp = Date.now();
-        const generalChannel = await client.channels.cache.fetch("702142443608473602");
+        const generalChannel = await client.channels.fetch("702142443608473602");
         const messages = await generalChannel.messages.fetch({ limit: 10 }); // Check last 10 messages
 
         for( let message of messages ) {
-            if (currentTimestamp - message.createdTimestamp > 60 * 60 * 1000) { // Check last hour
+            if (currentTimestamp - message[1].createdTimestamp > 60 * 60 * 1000) { // Check last hour
                 break;
             }
-            if (message.member.id === gunUserId && message.content.startsWith(newState.member.displayName)) {
+            if (message[1].author.id === gunUserId && message[1].content.startsWith(newState.member.displayName)) {
                 return;
             }
         }
