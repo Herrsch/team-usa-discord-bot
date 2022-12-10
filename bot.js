@@ -110,6 +110,7 @@ client.on('messageCreate', async (msg) => {
 
         } else if (msg.content.toLowerCase().startsWith("~remove")) {
             const newMovieNumber = movieEntry.match(/\d/g).join("");
+            console.log("Removing " + newMovieNumber + ". " + collection[i]);
             collection.splice(newMovieNumber - 1, 1);
             for (let i = newMovieNumber - 1; i < collection.length; i++) {
                 separatorPos = collection[i].indexOf(".");
