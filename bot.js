@@ -76,9 +76,9 @@ client.on('messageCreate', async (msg) => {
     }
 
     if (msg.mentions.members.size > 0) {
-        if (msg.content.substring(1, 6) == "shoot") {
+        if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
             shoot(msg, 15 * 1000);
-        } else if (msg.content.substring(1, 5) == "kill") {
+        } else if (msg.content.substring(1, 5).toLowerCase() === "kill") {
             shoot(msg, 60 * 1000);
         }
     }
@@ -91,7 +91,7 @@ client.on('messageCreate', async (msg) => {
         }
         const movieEntry = msg.content.substring(separatorPos + 1); // The sent message with the bot command excluded
 
-        if (msg.content.startsWith("~add")) {
+        if (msg.content.toLowerCase().startsWith("~add")) {
             separatorPos = movieEntry.search(" ");
             if (separatorPos < 0) {
                 return;
@@ -108,9 +108,8 @@ client.on('messageCreate', async (msg) => {
             }
 
 
-        } else if (msg.content.startsWith("~remove")) {
+        } else if (msg.content.toLowerCase().startsWith("~remove")) {
             const newMovieNumber = movieEntry.match(/\d/g).join("");
-            console.log(newMovieNumber);
             collection.splice(newMovieNumber - 1, 1);
             for (let i = newMovieNumber - 1; i < collection.length; i++) {
                 separatorPos = collection[i].indexOf(".");
@@ -119,7 +118,7 @@ client.on('messageCreate', async (msg) => {
             }
 
             
-        } else if (msg.content.startsWith("~update")) {
+        } else if (msg.content.toLowerCase().startsWith("~update")) {
             separatorPos = movieEntry.search(" ");
             if (separatorPos < 0) {
                 return;
