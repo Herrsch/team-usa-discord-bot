@@ -146,7 +146,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         const messages = await generalChannel.messages.fetch({ limit: 10 }); // Check last 10 messages
 
         for( let message of messages ) {
-            if (currentTimestamp - message[1].createdTimestamp > 60 * 60 * 1000) { // Check last hour
+            if (currentTimestamp - message[1].createdTimestamp > 4 * 60 * 60 * 1000) { // Check last four hours
                 break;
             }
             if (message[1].author.id === gunUserId && message[1].content.startsWith(newState.member.displayName)) {
