@@ -143,7 +143,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     if (newState.streaming && newState.channel != null && !oldState.streaming) {
         const currentTimestamp = Date.now();
         const generalChannel = await client.channels.fetch("702142443608473602");
-        const messages = await generalChannel.messages.fetch({ limit: 10 }); // Check last 10 messages
+        const messages = await generalChannel.messages.fetch({ limit: 15 }); // Check last 15 messages
 
         for( let message of messages ) {
             if (currentTimestamp - message[1].createdTimestamp > 4 * 60 * 60 * 1000) { // Check last four hours
@@ -197,7 +197,7 @@ async function updateScoreBoard(movieCollection, channel) {
     var scoreboardMessageCharCount = 0;
 
     for (let i = 0; i < movieCollection.length; i++) {
-        if (scoreboardMessageCharCount + movieCollection[i].length + 1 > 2000) {
+        if (scoreboardMessageCharCount + movieCollection[i].length + 2 > 2000) {
             await channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
 
             scoreboardMessageIndex++;
@@ -208,8 +208,8 @@ async function updateScoreBoard(movieCollection, channel) {
             }
         }
         if (scoreboardMessageCharCount > 0) {
-            scoreboardMessageContent += "\n"; // I THINK a newline only counts as one character
-            scoreboardMessageCharCount++;
+            scoreboardMessageContent += "\n"; // Unsure whether a newline counts as one or two characters
+            scoreboardMessageCharCount += 2;
         }
 
         scoreboardMessageContent += movieCollection[i];
