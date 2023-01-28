@@ -74,11 +74,13 @@ client.on('messageCreate', async (msg) => {
     if (msg.content.charAt(0) != '~') {
         return;
     }
-
+    
     if (msg.mentions.members.size > 0) {
         if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
+            msg.channel.sendTyping();
             shoot(msg, 15 * 1000);
         } else if (msg.content.substring(1, 5).toLowerCase() === "kill") {
+            msg.channel.sendTyping();
             shoot(msg, 60 * 1000);
         }
     }
@@ -96,6 +98,7 @@ client.on('messageCreate', async (msg) => {
             if (separatorPos < 0) {
                 return;
             }
+            msg.channel.sendTyping();
 
             const newMovieNumber = movieEntry.substring(0, separatorPos).match(/\d/g).join("");
             const newMovieTitle = movieEntry.substring(separatorPos + 1);
@@ -109,6 +112,7 @@ client.on('messageCreate', async (msg) => {
 
 
         } else if (msg.content.toLowerCase().startsWith("~remove")) {
+            msg.channel.sendTyping();
             const newMovieNumber = movieEntry.match(/\d/g).join("");
             console.log("Removing " + newMovieNumber + ". " + collection[i]);
             collection.splice(newMovieNumber - 1, 1);
@@ -124,6 +128,7 @@ client.on('messageCreate', async (msg) => {
             if (separatorPos < 0) {
                 return;
             }
+            msg.channel.sendTyping();
 
             const newMovieNumber = movieEntry.substring(0, separatorPos).match(/\d/g).join("");
             const newMovieTitle = movieEntry.substring(separatorPos + 1);
