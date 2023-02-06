@@ -38,7 +38,8 @@ const faceEmotes = [
      "<:yousureaboutthat:810692238472249345>",
      "<:bust:954607891476807740>",
      "<:lazarwolf:955293614907465738>",
-     "<:stung:967970671797887016>"
+     "<:stung:967970671797887016>",
+     "<:goodboy:1071996889312014386>"
 ];
 
 const gunUserId = "938529523811627038";
@@ -51,6 +52,12 @@ const scoreboardMessageIds = [
     "1047313681647673384",
     "1047313682637537320"
 ];
+
+const boffoBalanceIDsMap = new Map([ // User ID, balance post ID
+    ["282597947064057856", "1072005281892008017"], // Gene
+    ["206973395517177856", "1072007073786761247"], // John
+    ["209463935009685506", "1072020431013412865"] // Ted
+])
 
 client.on('ready', () => {
  console.log('Logged in!');
@@ -70,11 +77,35 @@ async function getMovieCollection(channel) {
     return movieCollection;
 }
 
+async function getBalanceForUserId(userId) {
+    if (!boffoBalanceIDsMap.has(userId)) {
+        return;
+    }
+    const generalChannel = await client.channels.fetch("702142443608473602");
+    const message = await generalChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
+
+    const balanceNumber = message.content.substring(1).match(/\d/g).join("");
+
+    return parseInt(balanceNumber);
+}
+
+async function updateBalanceForUserId(userId, newBalance) {
+    const generalChannel = await client.channels.fetch("702142443608473602");
+
+    await generalChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance));
+}
+
 client.on('messageCreate', async (msg) => {
     if (msg.content.charAt(0) != '~') {
         return;
     }
-    
+
+    // if (msg.content.startsWith("~balance")) {
+    //     msg.channel.send("tiny ted's ₿offo ₿alance:");
+    //     msg.channel.send("₿100");
+    //     return;
+    // }
+
     if (msg.mentions.members.size > 0) {
         if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
             msg.channel.sendTyping();
@@ -82,6 +113,33 @@ client.on('messageCreate', async (msg) => {
         } else if (msg.content.substring(1, 5).toLowerCase() === "kill") {
             msg.channel.sendTyping();
             shoot(msg, 60 * 1000);
+        }
+
+
+        if (msg.content.startsWith("~send")) {
+            const fromUser = msg.member.id;
+            var fromUserBalance = await getBalanceForUserId(fromUser);
+
+            const mentionedUserIds = Array.from( msg.mentions.members.keys() );
+            var amountToSend = msg.content.split(" ");
+            amountToSend = parseInt(amountToSend[amountToSend.length - 1]);
+
+            for (let i = 0; i < mentionedUserIds.length; i++) {
+                const toUser = mentionedUserIds[i];
+                var toUserBalance = await getBalanceForUserId(toUser);
+                
+                if (amountToSend > fromUserBalance ||
+                    fromUser == toUser ||
+                    fromUserBalance - amountToSend < 0) {
+                    return;
+                }
+
+                fromUserBalance -= amountToSend;
+
+                updateBalanceForUserId(fromUser, fromUserBalance);
+                updateBalanceForUserId(toUser, toUserBalance + amountToSend);
+            }
+            return;
         }
     }
     
