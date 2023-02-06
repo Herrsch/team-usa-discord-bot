@@ -3,6 +3,7 @@ const client = new Discord.Client({
     intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"]
 });
 const auth = require('./auth.json');
+// const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
 
 const gunEmote = "<:kaboom:938830966800150539>";
 const gunEmote2 = "<:kaboom2:938856552532676678>";
@@ -54,10 +55,17 @@ const scoreboardMessageIds = [
 ];
 
 const boffoBalanceIDsMap = new Map([ // User ID, balance post ID
-    ["282597947064057856", "1072005281892008017"], // Gene
-    ["206973395517177856", "1072007073786761247"], // John
-    ["209463935009685506", "1072020431013412865"] // Ted
-])
+    ["410621256140980225", "1072279148246081637"], // Ben
+    ["206973395517177856", "1072279160908681286"], // John
+    ["424031474661064715", "1072279173168631839"], // Adam
+    ["206975381067137025", "1072279186032558110"], // Dylan
+    ["701085890117632075", "1072279198665814056"], // Garrett
+    ["282597947064057856", "1072279211437465640"], // Gene
+    ["281984105523183616", "1072279223840022568"], // Nathaniel
+    ["746882782596431872", "1072279236355833917"], // Maren
+    ["206968933725503488", "1072279248938746017"], // Joe
+    ["209463935009685506", "1072279261584576584"] // Ted
+]);
 
 client.on('ready', () => {
  console.log('Logged in!');
@@ -81,8 +89,8 @@ async function getBalanceForUserId(userId) {
     if (!boffoBalanceIDsMap.has(userId)) {
         return;
     }
-    const generalChannel = await client.channels.fetch("702142443608473602");
-    const message = await generalChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
+    const ledgerChannel = await client.channels.fetch("1072168363129835560");
+    const message = await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
 
     const balanceNumber = message.content.substring(1).match(/\d/g).join("");
 
@@ -90,9 +98,17 @@ async function getBalanceForUserId(userId) {
 }
 
 async function updateBalanceForUserId(userId, newBalance) {
-    const generalChannel = await client.channels.fetch("702142443608473602");
+    const ledgerChannel = await client.channels.fetch("1072168363129835560");
 
-    await generalChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance));
+    await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance));
+}
+
+async function deleteMsgs(channel) {
+    var messages = await channel.messages.fetch({ limit: 15 });
+
+    messages.forEach( message => {
+        message.delete();
+    });
 }
 
 client.on('messageCreate', async (msg) => {
@@ -100,11 +116,86 @@ client.on('messageCreate', async (msg) => {
         return;
     }
 
-    // if (msg.content.startsWith("~balance")) {
-    //     msg.channel.send("tiny ted's ₿offo ₿alance:");
-    //     msg.channel.send("₿100");
+    // if (msg.content.startsWith("~test")) {
+    //     await deleteMsgs(msg.channel);
     //     return;
     // }
+
+    /*
+    if (msg.content.startsWith("~bank")) {
+        msg.channel.send(".");
+        await wait(1000);
+        msg.channel.send(".");
+        await wait(1000);
+        msg.channel.send(".");
+        await wait(1000);
+        msg.channel.send(".");
+        await wait(1000);
+        msg.channel.send("Commands:\n`~tip @user #`");
+        await wait(1000);
+        msg.channel.send("**~The Bank of ₿offos~**\n~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@410621256140980225>:"); // Ben
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@206973395517177856>:"); // John
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@424031474661064715>:"); // Adam
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@206975381067137025>:"); // Dylan
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@701085890117632075>:"); // Garrett
+        await wait(1000);
+        msg.channel.send("₿1,000");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@282597947064057856>:"); // Gene
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@281984105523183616>:"); // Nathaniel
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@746882782596431872>:"); // Maren
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@206968933725503488>:"); // Joe
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        await wait(1000);
+        msg.channel.send("<@209463935009685506>:"); // Ted
+        await wait(1000);
+        msg.channel.send("₿100");
+        await wait(1000);
+        msg.channel.send("~~                                          ~~");
+        return;
+    }*/
 
     if (msg.mentions.members.size > 0) {
         if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
@@ -115,14 +206,38 @@ client.on('messageCreate', async (msg) => {
             shoot(msg, 60 * 1000);
         }
 
+        // if (msg.content.startsWith("~allowance")) {
+        //     const mentionedUserIds = Array.from( msg.mentions.members.keys() );
+        //     var amountToSend = msg.content.split(" ");
+        //     amountToSend = parseInt(amountToSend[amountToSend.length - 1]);
 
-        if (msg.content.startsWith("~send")) {
+        //     if (isNaN(amountToSend)) {
+        //         msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+        //         return;
+        //     }
+
+        //     for (let i = 0; i < mentionedUserIds.length; i++) {
+        //         const toUser = mentionedUserIds[i];
+
+        //         updateBalanceForUserId(toUser, amountToSend);
+        //         msg.channel.send(msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + amountToSend);
+        //     }
+        //     return;
+        // }
+
+        if (msg.content.startsWith("~tip")) {
+            msg.channel.sendTyping();
             const fromUser = msg.member.id;
             var fromUserBalance = await getBalanceForUserId(fromUser);
 
             const mentionedUserIds = Array.from( msg.mentions.members.keys() );
             var amountToSend = msg.content.split(" ");
             amountToSend = parseInt(amountToSend[amountToSend.length - 1]);
+
+            if (isNaN(amountToSend)) {
+                msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+                return;
+            }
 
             for (let i = 0; i < mentionedUserIds.length; i++) {
                 const toUser = mentionedUserIds[i];
@@ -135,9 +250,11 @@ client.on('messageCreate', async (msg) => {
                 }
 
                 fromUserBalance -= amountToSend;
+                toUserBalance += amountToSend;
 
                 updateBalanceForUserId(fromUser, fromUserBalance);
-                updateBalanceForUserId(toUser, toUserBalance + amountToSend);
+                updateBalanceForUserId(toUser, toUserBalance);
+                msg.channel.send(msg.member.displayName + " sends " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend + ".\n" + msg.member.displayName + "'s balance: ₿" + fromUserBalance + "\n" + msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + toUserBalance);
             }
             return;
         }
