@@ -101,7 +101,7 @@ async function getBalanceForUserId(userId) {
 async function updateBalanceForUserId(userId, newBalance) {
     const ledgerChannel = await client.channels.fetch("1072168363129835560");
 
-    await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance));
+    await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance.toLocaleString("en-US")));
 }
 
 async function deleteMsgs(channel) {
@@ -122,82 +122,6 @@ client.on('messageCreate', async (msg) => {
     //     return;
     // }
 
-    /*
-    if (msg.content.startsWith("~bank")) {
-        msg.channel.send(".");
-        await wait(1000);
-        msg.channel.send(".");
-        await wait(1000);
-        msg.channel.send(".");
-        await wait(1000);
-        msg.channel.send(".");
-        await wait(1000);
-        msg.channel.send("Commands:\n`~tip @user #`");
-        await wait(1000);
-        msg.channel.send("**~The Bank of ₿offos~**\n~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@410621256140980225>:"); // Ben
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@206973395517177856>:"); // John
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@424031474661064715>:"); // Adam
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@206975381067137025>:"); // Dylan
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@701085890117632075>:"); // Garrett
-        await wait(1000);
-        msg.channel.send("₿1,000");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@282597947064057856>:"); // Gene
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@281984105523183616>:"); // Nathaniel
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@746882782596431872>:"); // Maren
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@206968933725503488>:"); // Joe
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        await wait(1000);
-        msg.channel.send("<@209463935009685506>:"); // Ted
-        await wait(1000);
-        msg.channel.send("₿100");
-        await wait(1000);
-        msg.channel.send("~~                                          ~~");
-        return;
-    }*/
-
     if (msg.mentions.members.size > 0) {
         if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
             msg.channel.sendTyping();
@@ -210,7 +134,7 @@ client.on('messageCreate', async (msg) => {
         // if (msg.content.startsWith("~allowance")) {
         //     const mentionedUserIds = Array.from( msg.mentions.members.keys() );
         //     var amountToSend = msg.content.split(" ");
-        //     amountToSend = parseInt(amountToSend[amountToSend.length - 1]);
+        //     amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
 
         //     if (isNaN(amountToSend)) {
         //         msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
@@ -221,7 +145,7 @@ client.on('messageCreate', async (msg) => {
         //         const toUser = mentionedUserIds[i];
 
         //         updateBalanceForUserId(toUser, amountToSend);
-        //         msg.channel.send(msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + amountToSend);
+        //         msg.channel.send(msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + amountToSend.toLocaleString("en-US"));
         //     }
         //     return;
         // }
@@ -233,7 +157,7 @@ client.on('messageCreate', async (msg) => {
 
             const mentionedUserIds = Array.from( msg.mentions.members.keys() );
             var amountToSend = msg.content.split(" ");
-            amountToSend = parseInt(amountToSend[amountToSend.length - 1]);
+            amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
 
             if (isNaN(amountToSend)) {
                 msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
