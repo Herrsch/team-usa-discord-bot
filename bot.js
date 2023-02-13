@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client({
     intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILD_MESSAGE_REACTIONS"]
 });
-const auth = require('./auth.json');
+require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
 
 const gunEmote = "<:kaboom:938830966800150539>";
@@ -569,4 +569,4 @@ function randomFaceIndex() {
     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
   }
 
-client.login(auth.token);
+client.login(process.env.token);
