@@ -135,7 +135,7 @@ client.on('messageCreate', async (msg) => {
         //     const mentionedUserIds = Array.from( msg.mentions.members.keys() );
         //     var amountToSend = msg.content.split(" ");
         //     amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
-
+    
         //     if (isNaN(amountToSend)) {
         //         msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
         //         return;
