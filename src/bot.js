@@ -1,75 +1,22 @@
+import {
+    GUN_EMOTE,
+    GUN_EMOTE_2,
+    FACE_EMOTES,
+    GUN_USER_ID,
+    BEN_USER_ID,
+    LEDGER_CHANNEL_ID,
+    EMOTE_OWNERSHIP_MESSAGE_ID,
+    TRANSACTION_HISTORY_MESSAGE_ID,
+    SCOREBOARD_MESSAGE_IDS,
+    BOFFO_BALANCE_IDS_MAP
+} from "constants";
+
 const Discord = require('discord.js');
 const client = new Discord.Client({
     intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILD_MESSAGE_REACTIONS"]
 });
 require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
-
-const gunEmote = "<:kaboom:938830966800150539>";
-const gunEmote2 = "<:kaboom2:938856552532676678>";
-const faceEmotes = [
-     "<:Garrett:815754301224779797>",
-     "<:Jeb:788583309075939381>",
-     "<:abu:788578719726960710>",
-     "<:announcement:847274686135664640>",
-     "<:beep:788578684336472068>",
-     "<:chromebook:788964896309903370>",
-     "<:codepurple:906366020153913454>",
-     "<:dey:886797975572086835>",
-     "<:dontmakemekillyou:837140610212823050>",
-     "<:fast:788527751610892308>",
-     "<:gooby:791486603595874366>",
-     "<:howembarrassing:815755068375826545>",
-     "<:lola:794015396121280522>",
-     "<:mano:788578649452052540>",
-     "<:momwasrightaboutyou:919799591669497927>",
-     "<:myqueen:804950697883205633>",
-     "<:nathanielbait:852338398273470505>",
-     "<:nuntooshabby:808199411053756426>",
-     "<:pleasestop:897146206105530378>",
-     "<:ploggers:816871218837323786>",
-     "<:poggers:810693855933759518>",
-     "<:preach:890421423468871720>",
-     "<:squattersrights:869787818287841300>",
-     "<:ted:788578667072716811>",
-     "<:thomasiamcompletelyspeechless:847300197548556318>",
-     "<:trapped:805608831535153221>",
-     "<:uhoh:795491005406380034>",
-     "<:yikes:810686117891932170>",
-     "<:yousureaboutthat:810692238472249345>",
-     "<:bust:954607891476807740>",
-     "<:lazarwolf:955293614907465738>",
-     "<:stung:967970671797887016>",
-     "<:goodboy:1071996889312014386>",
-     "<:redalert:1071997535591350384>"
-];
-
-const gunUserId = "938529523811627038";
-const benUserId = "410621256140980225";
-const ledgerChannelId = "1072168363129835560";
-const emoteOwnershipMessageId = "1072279118944673872";
-const transactionHistoryMessageId = "1072279127291334767";
-
-const scoreboardMessageIds = [
-    "1047313677956681820",
-    "1047313679147864114",
-    "1047313680502628382",
-    "1047313681647673384",
-    "1047313682637537320"
-];
-
-const boffoBalanceIDsMap = new Map([ // User ID, balance post ID
-    ["410621256140980225", "1072279148246081637"], // Ben
-    ["206973395517177856", "1072279160908681286"], // John
-    ["424031474661064715", "1072279173168631839"], // Adam
-    ["206975381067137025", "1072279186032558110"], // Dylan
-    ["701085890117632075", "1072279198665814056"], // Garrett
-    ["282597947064057856", "1072279211437465640"], // Gene
-    ["281984105523183616", "1072279223840022568"], // Nathaniel
-    ["746882782596431872", "1072279236355833917"], // Maren
-    ["206968933725503488", "1072279248938746017"], // Joe
-    ["209463935009685506", "1072279261584576584"] // Ted
-]);
 
 client.on('ready', () => {
     // initializeMessages();
@@ -78,11 +25,11 @@ client.on('ready', () => {
 
 /*
 async function initializeMessages() { // Used for initializing or editing any template messages on startup
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    // const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
+    // const transactionHistoryMessage = await ledgerChannel.messages.fetch(TRANSACTION_HISTORY_MESSAGE_ID);
     // transactionHistoryMessage.edit("Transaction history:\n\nnone\n\nnone\n\nnone\n\nnone\n\nnone");
 
-//     const emoteOwnershipMessage = await ledgerChannel.messages.fetch(emoteOwnershipMessageId);
+//     const emoteOwnershipMessage = await ledgerChannel.messages.fetch(EMOTE_OWNERSHIP_MESSAGE_ID);
 //     emoteOwnershipMessage.edit("Unowned emotes: <:thomasiamcompletelyspeechless:847300197548556318> (₿1) | <:howembarrassing:815755068375826545> (₿1)\
 //  | <:announcement:847274686135664640> (₿1) | <:myqueen:804950697883205633> (₿1) | <:dunkaccino:790367046868140053> (₿1) | <:momwasrightaboutyou:919799591669497927> (₿1) | \
 //  <:lola:794015396121280522> (₿1) | <:nathanielbait:852338398273470505> (₿1) | <:bust:954607891476807740> (₿1) | <:yousureaboutthat:810692238472249345> (₿1) | <:gooby:791486603595874366> (₿1) | \
@@ -98,11 +45,11 @@ async function initializeMessages() { // Used for initializing or editing any te
 */
 
 async function getMovieCollection(channel) {
-    const message = await channel.messages.fetch(scoreboardMessageIds[0]);
+    const message = await channel.messages.fetch(SCOREBOARD_MESSAGE_IDS[0]);
     var movieCollection = message.content.split("\n");
 
-    for (let i = 1; i < scoreboardMessageIds.length; i++) {
-        const message2 = await channel.messages.fetch(scoreboardMessageIds[i]);
+    for (let i = 1; i < SCOREBOARD_MESSAGE_IDS.length; i++) {
+        const message2 = await channel.messages.fetch(SCOREBOARD_MESSAGE_IDS[i]);
         if (!message2.content.startsWith("List Part ")) {
             movieCollection = [...movieCollection, ...message2.content.split("\n")];
         }
@@ -112,11 +59,11 @@ async function getMovieCollection(channel) {
 }
 
 async function getBalanceForUserId(userId) {
-    if (!boffoBalanceIDsMap.has(userId)) {
+    if (!BOFFO_BALANCE_IDS_MAP.has(userId)) {
         return;
     }
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const message = await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
+    const message = await ledgerChannel.messages.fetch(BOFFO_BALANCE_IDS_MAP.get(userId));
 
     const balanceNumber = message.content.substring(1).match(/\d/g).join("");
 
@@ -124,29 +71,29 @@ async function getBalanceForUserId(userId) {
 }
 
 async function updateBalanceForUserId(userId, newBalance) {
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
 
-    await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance.toLocaleString("en-US")));
+    await ledgerChannel.messages.fetch(BOFFO_BALANCE_IDS_MAP.get(userId)).then( message => message.edit(content="₿" + newBalance.toLocaleString("en-US")));
 }
 
 async function addToBalanceForUserId(userId, amountToAdd) {
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const message = await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
+    const message = await ledgerChannel.messages.fetch(BOFFO_BALANCE_IDS_MAP.get(userId));
     const balanceNumber = parseInt(message.content.substring(1).match(/\d/g).join("")) + amountToAdd;
 
     await message.edit(content="₿" + balanceNumber.toLocaleString("en-US"));
 }
 
 async function getEmoteOwnershipMessage() {
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const message = await ledgerChannel.messages.fetch(emoteOwnershipMessageId);
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
+    const message = await ledgerChannel.messages.fetch(EMOTE_OWNERSHIP_MESSAGE_ID);
 
     return message;
 }
 
 async function addToTransactionHistory(transactionToAdd) {
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
+    const transactionHistoryMessage = await ledgerChannel.messages.fetch(TRANSACTION_HISTORY_MESSAGE_ID);
 
     var transactions = transactionHistoryMessage.content.split("\n\n");
     transactions.pop();
@@ -156,8 +103,8 @@ async function addToTransactionHistory(transactionToAdd) {
 }
 
 async function trackInterestInTransactionHistory(userId, emote) {
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
+    const ledgerChannel = await client.channels.fetch(LEDGER_CHANNEL_ID);
+    const transactionHistoryMessage = await ledgerChannel.messages.fetch(TRANSACTION_HISTORY_MESSAGE_ID);
 
     var transactions = transactionHistoryMessage.content.split("\n\n");
 
@@ -207,7 +154,7 @@ async function checkForEmotes(message) {
 
 client.on('messageCreate', async (msg) => {
     if (msg.content.charAt(0) != '~' &&
-        (msg.author.id != gunUserId || msg.content.search("acquires") < 0)) {
+        (msg.author.id != GUN_USER_ID || msg.content.search("acquires") < 0)) {
         await checkForEmotes(msg);
         return;
     }
@@ -231,10 +178,10 @@ client.on('messageCreate', async (msg) => {
         var bidAmount = msg.content.split(" ");
         bidAmount = parseInt(bidAmount[bidAmount.length - 1].match(/\d/g).join(""));
         if (isNaN(bidAmount)) {
-            msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+            msg.channel.send("Invalid amount! " + FACE_EMOTES[randomFaceIndex()]);
             return;
         } else if (bidAmount > biddingUserBalance) {
-            msg.channel.send("Insufficient funds! " + faceEmotes[randomFaceIndex()]);
+            msg.channel.send("Insufficient funds! " + FACE_EMOTES[randomFaceIndex()]);
             return;
         }
 
@@ -286,7 +233,7 @@ client.on('messageCreate', async (msg) => {
         }
 
         if (emotePrice == null) {
-            msg.channel.send("Invalid emote! " + faceEmotes[randomFaceIndex()]);
+            msg.channel.send("Invalid emote! " + FACE_EMOTES[randomFaceIndex()]);
             return;
         }
 
@@ -339,7 +286,7 @@ client.on('messageCreate', async (msg) => {
         //     amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
     
         //     if (isNaN(amountToSend)) {
-        //         msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+        //         msg.channel.send("Invalid amount! " + FACE_EMOTES[randomFaceIndex()]);
         //         return;
         //     }
     
@@ -362,7 +309,7 @@ client.on('messageCreate', async (msg) => {
             amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
 
             if (isNaN(amountToSend)) {
-                msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+                msg.channel.send("Invalid amount! " + FACE_EMOTES[randomFaceIndex()]);
                 return;
             }
 
@@ -457,7 +404,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             if (currentTimestamp - message[1].createdTimestamp > 4 * 60 * 60 * 1000) { // Check last four hours
                 break;
             }
-            if (message[1].author.id === gunUserId && message[1].content.startsWith(newState.member.displayName)) {
+            if (message[1].author.id === GUN_USER_ID && message[1].content.startsWith(newState.member.displayName)) {
                 return;
             }
         }
@@ -504,12 +451,12 @@ async function giveEmoteOwnerRoyalties(emoteId, userId) {
 function shoot(msg, timeoutDuration) {
 
     var backfire = false;
-    var shootMessage = faceEmotes[randomFaceIndex()];
+    var shootMessage = FACE_EMOTES[randomFaceIndex()];
     var tagMessage = "";
 
     msg.mentions.members.forEach( mentionedMember => {
-        if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId) {
-          if (msg.member.id != benUserId) {
+        if (mentionedMember.id == BEN_USER_ID || mentionedMember.id == GUN_USER_ID) {
+          if (msg.member.id != BEN_USER_ID) {
                 msg.member.timeout(timeoutDuration * 2);
                 tagMessage = "<@" + msg.member.id + ">";
                 backfire = true;
@@ -525,10 +472,10 @@ function shoot(msg, timeoutDuration) {
         }
     });
     for (let i = 0; i < msg.mentions.members.size; i++) {
-        shootMessage = gunEmote + shootMessage;
+        shootMessage = GUN_EMOTE + shootMessage;
 
         if (backfire || timeoutDuration > 20 * 1000) {
-            shootMessage = shootMessage + gunEmote2;
+            shootMessage = shootMessage + GUN_EMOTE_2;
         }
     }
     msg.channel.send(tagMessage);
@@ -542,12 +489,12 @@ async function updateScoreBoard(movieCollection, channel) {
 
     for (let i = 0; i < movieCollection.length; i++) {
         if (scoreboardMessageCharCount + movieCollection[i].length + 2 > 2000) {
-            await channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
+            await channel.messages.fetch(SCOREBOARD_MESSAGE_IDS[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
 
             scoreboardMessageIndex++;
             scoreboardMessageContent = "";
             scoreboardMessageCharCount = 0;
-            if (scoreboardMessageIndex >= scoreboardMessageIds.length) {
+            if (scoreboardMessageIndex >= SCOREBOARD_MESSAGE_IDS.length) {
                 return;
             }
         }
@@ -560,12 +507,12 @@ async function updateScoreBoard(movieCollection, channel) {
         scoreboardMessageCharCount += movieCollection[i].length;
     }
 
-    channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
+    channel.messages.fetch(SCOREBOARD_MESSAGE_IDS[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
 }
 
 function randomFaceIndex() {
     min = Math.ceil(0);
-    max = Math.floor(faceEmotes.length);
+    max = Math.floor(FACE_EMOTES.length);
     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
   }
 
