@@ -46,6 +46,7 @@ const faceEmotes = [
 
 const gunUserId = "938529523811627038";
 const benUserId = "410621256140980225";
+const geneUserId = "282597947064057856";
 const ledgerChannelId = "1072168363129835560";
 const emoteOwnershipMessageId = "1072279118944673872";
 const transactionHistoryMessageId = "1072279127291334767";
@@ -216,6 +217,16 @@ client.on('messageCreate', async (msg) => {
     //     await deleteMsgs(msg.channel);
     //     return;
     // }
+    if (msg.content.startsWith("~delete")) {
+        if (msg.author.id != geneUserId && msg.author.id != benUserId) {
+            return;
+        }
+        if (msg.reference) {
+            msg.channel.messages.fetch(msg.reference.messageId).then( message => message.delete());
+        }
+        msg.delete();
+        return;
+    }
 
     if (msg.content.startsWith("~bid")) {
         const emoteToBuy = msg.content.substring(msg.content.search("<"), msg.content.search(">") + 1);
@@ -417,7 +428,6 @@ client.on('messageCreate', async (msg) => {
         } else if (msg.content.toLowerCase().startsWith("~remove")) {
             msg.channel.sendTyping();
             const newMovieNumber = movieEntry.match(/\d/g).join("");
-            console.log("Removing " + newMovieNumber + ". " + collection[i]);
             collection.splice(newMovieNumber - 1, 1);
             for (let i = newMovieNumber - 1; i < collection.length; i++) {
                 separatorPos = collection[i].indexOf(".");
