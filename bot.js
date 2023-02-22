@@ -72,10 +72,64 @@ const boffoBalanceIDsMap = new Map([ // User ID, balance post ID
     ["209463935009685506", "1072279261584576584"] // Ted
 ]);
 
+function Emote(id, owner, value) {
+    this.id = id;
+    this.owner = owner;
+    this.value = value;
+}
+
+var emoteOwnershipMap = new Map();
+var accountBalancesMap = new Map();
+
 client.on('ready', () => {
     // initializeMessages();
+    initializeAccountBalances();
+    initializeEmoteOwnership();
     console.log('Logged in!');
 });
+
+async function initializeAccountBalances() {
+    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
+
+    const users = Array.from(boffoBalanceIDsMap.keys());
+    for (let i = 0; i < users.length; i++) {
+        const message = await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(users[i]));
+        const balanceNumber = message.content.substring(1).match(/\d/g).join("");
+        accountBalancesMap.set(users[i], parseInt(balanceNumber));
+    };
+}
+
+async function initializeEmoteOwnership() {
+    const emoteOwnershipMessage = await getEmoteOwnershipMessage();
+    var emoteOwnershipMessageContent = emoteOwnershipMessage.content.split("\n");
+    
+    for (let i = 0; i < emoteOwnershipMessageContent.length; i++) {
+        
+        var thisOwnershipLine = emoteOwnershipMessageContent[i];
+        if (!thisOwnershipLine.startsWith("<@")) {
+            continue;
+        }
+
+        var emoteOwnerId = thisOwnershipLine.substring(2, thisOwnershipLine.search(">"));
+
+        const emotes = thisOwnershipLine.match(/<:.+?:\d+>/g);
+
+        if (emotes == null) {
+            continue;
+        }
+        for (let j = 0; j < emotes.length; j++) {
+            const emoteStringIndex = thisOwnershipLine.search(emotes[j]);
+            // find emote price
+            var emotePrice = thisOwnershipLine.substring(emoteStringIndex + emotes[j].length + 1);
+            var regExp = /\(([^)]+)\)/;
+            emotePrice = regExp.exec(emotePrice)[1];
+            var priceLength = emotePrice.length;
+            emotePrice = parseInt(emotePrice.match(/\d/g).join(""));
+
+            emoteOwnershipMap.set(emotes[j], new Emote(emotes[j], emoteOwnerId, emotePrice));
+        }
+    }
+}
 
 /*
 async function initializeMessages() { // Used for initializing or editing any template messages on startup
@@ -112,30 +166,30 @@ async function getMovieCollection(channel) {
     return movieCollection;
 }
 
-async function getBalanceForUserId(userId) {
-    if (!boffoBalanceIDsMap.has(userId)) {
+function updateBalanceForUserId(userId, newBalance, updatePost) {
+    accountBalancesMap.set(userId, newBalance);
+
+    if (updatePost) {
+        updateBalancePostForUserId(userId);
+    }
+}
+
+function addToBalanceForUserId(userId, amountToAdd, updatePost) {
+    if (!accountBalancesMap.has(userId)) {
         return;
     }
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const message = await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
 
-    const balanceNumber = message.content.substring(1).match(/\d/g).join("");
+    let newBalance = accountBalancesMap.get(userId) + amountToAdd;
+    accountBalancesMap.set(userId, newBalance);
 
-    return parseInt(balanceNumber);
+    if (updatePost) {
+        updateBalancePostForUserId(userId);
+    }
 }
 
-async function updateBalanceForUserId(userId, newBalance) {
+async function updateBalancePostForUserId(userId) {
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-
-    await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + newBalance.toLocaleString("en-US")));
-}
-
-async function addToBalanceForUserId(userId, amountToAdd) {
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const message = await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId));
-    const balanceNumber = parseInt(message.content.substring(1).match(/\d/g).join("")) + amountToAdd;
-
-    await message.edit(content="₿" + balanceNumber.toLocaleString("en-US"));
+    await ledgerChannel.messages.fetch(boffoBalanceIDsMap.get(userId)).then( message => message.edit(content="₿" + accountBalancesMap.get(userId).toLocaleString("en-US")));
 }
 
 async function getEmoteOwnershipMessage() {
@@ -143,6 +197,22 @@ async function getEmoteOwnershipMessage() {
     const message = await ledgerChannel.messages.fetch(emoteOwnershipMessageId);
 
     return message;
+}
+
+async function updateEmoteOwnershipMessage() {
+    const ownershipMessage = await getEmoteOwnershipMessage();
+
+    var ownersMap = new Map();
+    emoteOwnershipMap.forEach(emote => {
+        if (ownersMap.has(emote.owner)) {
+            var ownershipLine = ownersMap.get(emote.owner) + " | " + emote.id + " (₿" + emote.value + ")";
+            ownersMap.set(emote.owner, ownershipLine);
+        } else {
+            ownersMap.set(emote.owner, "<@" + emote.owner + ">'s emotes: " + emote.id + " (₿" + emote.value + ")");
+        }
+    });
+    var ownersArray = Array.from(ownersMap.values());
+    ownershipMessage.edit(ownersArray.join("\n"));
 }
 
 async function addToTransactionHistory(transactionToAdd) {
@@ -230,14 +300,20 @@ client.on('messageCreate', async (msg) => {
 
     if (msg.content.startsWith("~bid")) {
         const emoteToBuy = msg.content.substring(msg.content.search("<"), msg.content.search(">") + 1);
-        
         if (emoteToBuy == "") {
+            return;
+        }
+        var emoteId = emoteToBuy.substring(3);
+        emoteId = emoteId.substring(emoteId.search(":") + 1, emoteId.search(">"));
+
+        var serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
+        if (serverEmote == null || !serverEmote.available) {
             return;
         }
         msg.channel.sendTyping();
         // verify user has enough ₿ to bid on emote
         const biddingUser = msg.member.id;
-        var biddingUserBalance = await getBalanceForUserId(biddingUser);
+        var biddingUserBalance = accountBalancesMap.get(biddingUser);
 
         var bidAmount = msg.content.split(" ");
         bidAmount = parseInt(bidAmount[bidAmount.length - 1].match(/\d/g).join(""));
@@ -249,86 +325,35 @@ client.on('messageCreate', async (msg) => {
             return;
         }
 
-        const emoteOwnershipMessage = await getEmoteOwnershipMessage();
-        var emoteOwnershipMessageContent = emoteOwnershipMessage.content.split("\n");
         // find current ownership
-        var emoteOwnerId;
-        var emotePrice;
-        for (let i = 0; i < emoteOwnershipMessageContent.length; i++) {
-            let emoteStringIndex = emoteOwnershipMessageContent[i].search(emoteToBuy);
-            if (emoteStringIndex < 0) {
-                continue;
+        var previousOwner;
+        if (emoteOwnershipMap.has(emoteToBuy)) {
+            const currentEmoteProperties = emoteOwnershipMap.get(emoteToBuy);
+
+            if (currentEmoteProperties.owner == biddingUser) {
+                return;
             }
-            
-            var thisOwnershipLine = emoteOwnershipMessageContent[i];
-
-            // Find emote owner
-            if (thisOwnershipLine.startsWith("<@")) {
-                emoteOwnerId = thisOwnershipLine.substring(2, thisOwnershipLine.search(">"));
-                if (emoteOwnerId == biddingUser) {
-                    return;
-                }
-            }
-
-            // find emote price
-            emotePrice = thisOwnershipLine.substring(emoteStringIndex + emoteToBuy.length + 1);
-            var regExp = /\(([^)]+)\)/;
-            emotePrice = regExp.exec(emotePrice)[1];
-            var priceLength = emotePrice.length;
-            emotePrice = parseInt(emotePrice.match(/\d/g).join(""));
-
             // Make sure new user can afford
-            if (emotePrice >= bidAmount) {
-                msg.channel.send("Bid amount must be higher than ₿" + emotePrice + "!");
+            if (currentEmoteProperties.value >= bidAmount) {
+                msg.channel.send("Bid amount must be higher than ₿" + currentEmoteProperties.value + "! " + faceEmotes[randomFaceIndex()]);
                 return;
             }
 
-            // Remove the emote from this line
-            var lengthToTrimFromEnd = emoteToBuy.length + 3 + priceLength;
-            if (thisOwnershipLine.charAt(emoteStringIndex + lengthToTrimFromEnd + 1) == "|") {
-                lengthToTrimFromEnd += 3;
-            } else if (thisOwnershipLine.charAt(emoteStringIndex - 2) == "|") {
-                emoteStringIndex -= 3;
-                lengthToTrimFromEnd += 3;
-            }
-            thisOwnershipLine = thisOwnershipLine.substring(0, emoteStringIndex) + thisOwnershipLine.substring(emoteStringIndex + lengthToTrimFromEnd);
-            emoteOwnershipMessageContent[i] = thisOwnershipLine;
-            break;
+            previousOwner = currentEmoteProperties.owner;
+            addToBalanceForUserId(previousOwner, currentEmoteProperties.value, true);
         }
 
-        if (emotePrice == null) {
-            msg.channel.send("Invalid emote! " + faceEmotes[randomFaceIndex()]);
-            return;
-        }
+        emoteOwnershipMap.set(emoteToBuy, new Emote(emoteToBuy, biddingUser, bidAmount));
 
-        // move ownership to new user
-        for (let i = 0; i < emoteOwnershipMessageContent.length; i++) {
-            if (emoteOwnershipMessageContent[i].startsWith("<@" + biddingUser + ">")) {
-                if (emoteOwnershipMessageContent[i].charAt(emoteOwnershipMessageContent[i].length - 1) == ":") {
-                    emoteOwnershipMessageContent[i] += " ";
-                } else if (emoteOwnershipMessageContent[i].charAt(emoteOwnershipMessageContent[i].length - 2) != ":") {
-                    emoteOwnershipMessageContent[i] += " | ";
-                }
-                emoteOwnershipMessageContent[i] += emoteToBuy + " (₿" + bidAmount + ")";
-                break;
-            }
-
-            if (i == emoteOwnershipMessageContent.length - 1) {
-                emoteOwnershipMessageContent[emoteOwnershipMessageContent.length] = "<@" + biddingUser + ">'s emotes: " + emoteToBuy + " (₿" + bidAmount + ")";
-                break;
-            }
-        }
-
-        // edit ownership message
-        emoteOwnershipMessage.edit(emoteOwnershipMessageContent.join("\n"));
+        // update the ownership message
+        updateEmoteOwnershipMessage();
 
         // charge bidder
-        addToBalanceForUserId(biddingUser, -bidAmount);
+        addToBalanceForUserId(biddingUser, -bidAmount, true);
         // refund old owner
-        if (emoteOwnerId) {
-            addToBalanceForUserId(emoteOwnerId, emotePrice);
-            msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " from <@" + emoteOwnerId + "> for ₿" + bidAmount + "!");
-            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " acquired " + emoteToBuy + " from <@" + emoteOwnerId + "> for ₿" + bidAmount + ".");
+        if (previousOwner != null) {
+            msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + "!");
+            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " acquired " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + ".");
         } else {
             msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " for ₿" + bidAmount + "!");
             addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " acquired " + emoteToBuy + " for ₿" + bidAmount + ".");
@@ -366,7 +391,7 @@ client.on('messageCreate', async (msg) => {
         if (msg.content.startsWith("~tip")) {
             msg.channel.sendTyping();
             const fromUser = msg.member.id;
-            var fromUserBalance = await getBalanceForUserId(fromUser);
+            var fromUserBalance = accountBalancesMap.get(fromUser);
 
             const mentionedUserIds = Array.from( msg.mentions.members.keys() );
             var amountToSend = msg.content.split(" ");
@@ -379,7 +404,7 @@ client.on('messageCreate', async (msg) => {
 
             for (let i = 0; i < mentionedUserIds.length; i++) {
                 const toUser = mentionedUserIds[i];
-                var toUserBalance = await getBalanceForUserId(toUser);
+                var toUserBalance = accountBalancesMap.get(toUser);
                 
                 if (amountToSend > fromUserBalance ||
                     fromUser == toUser ||
@@ -390,8 +415,8 @@ client.on('messageCreate', async (msg) => {
                 fromUserBalance -= amountToSend;
                 toUserBalance += amountToSend;
 
-                updateBalanceForUserId(fromUser, fromUserBalance);
-                updateBalanceForUserId(toUser, toUserBalance);
+                updateBalanceForUserId(fromUser, fromUserBalance, true);
+                updateBalanceForUserId(toUser, toUserBalance, true);
                 msg.channel.send(msg.member.displayName + " sends " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend + ".\n" + msg.member.displayName + "'s balance: ₿" + fromUserBalance + "\n" + msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + toUserBalance);
                 addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " sent " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
             }
@@ -482,32 +507,16 @@ client.on('messageReactionAdd', async(reaction, user) => {
 });
 
 async function giveEmoteOwnerRoyalties(emoteId, userId) {
-    const emoteOwnershipMessage = await getEmoteOwnershipMessage();
-    var emoteOwnershipMessageContent = emoteOwnershipMessage.content.split("\n");
-    // find current ownership
-    var emoteOwnerId;
-    for (let i = 0; i < emoteOwnershipMessageContent.length; i++) {
-        // Find if emote is on this line
-        let emoteStringIndex = emoteOwnershipMessageContent[i].search(emoteId);
-        if (emoteStringIndex < 0) {
-            continue;
-        }
-
-        // Find emote owner
-        if (emoteOwnershipMessageContent[i].startsWith("<@")) {
-            emoteOwnerId = emoteOwnershipMessageContent[i].substring(2, 20);
-            if (emoteOwnerId == userId) {
-                return;
-            }
-        }
-
-        // break out if we've found the emote owner
-        break;
+    if (!emoteOwnershipMap.has(emoteId)) {
+        return;
     }
 
-    if (emoteOwnerId) {
-        await addToBalanceForUserId(emoteOwnerId, 1);
-        trackInterestInTransactionHistory(emoteOwnerId, emoteId);
+    const emoteOwner = emoteOwnershipMap.get(emoteId).owner;
+    if (emoteOwner == userId) {
+        return;
+    } else {
+        addToBalanceForUserId(emoteOwner, 1, true);
+        trackInterestInTransactionHistory(emoteOwner, emoteId);
     }
 }
 
