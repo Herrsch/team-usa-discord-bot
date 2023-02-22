@@ -302,12 +302,16 @@ client.on('messageCreate', async (msg) => {
         const emoteToBuy = msg.content.substring(msg.content.search("<"), msg.content.search(">") + 1);
         if (emoteToBuy == "") {
             return;
+        } else if (emoteToBuy == gunEmote || emoteToBuy == gunEmote2) {
+            msg.channel.send("~shoot <@" + msg.author.id + ">");
+            return;
         }
         var emoteId = emoteToBuy.substring(3);
         emoteId = emoteId.substring(emoteId.search(":") + 1, emoteId.search(">"));
 
         var serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
         if (serverEmote == null || !serverEmote.available) {
+            msg.channel.send("~shoot <@" + msg.author.id + ">");
             return;
         }
         msg.channel.sendTyping();
@@ -528,12 +532,12 @@ function shoot(msg, timeoutDuration) {
 
     msg.mentions.members.forEach( mentionedMember => {
         if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId) {
-          if (msg.member.id != benUserId) {
+          if (msg.member.id == benUserId || msg.member.id == gunUserId) {
+                return;
+            } else {
                 msg.member.timeout(timeoutDuration * 2);
                 tagMessage = "<@" + msg.member.id + ">";
                 backfire = true;
-            } else {
-                return;
             }
         } else {
             if (tagMessage != "") {
@@ -586,6 +590,6 @@ function randomFaceIndex() {
     min = Math.ceil(0);
     max = Math.floor(faceEmotes.length);
     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-  }
+}
 
 client.login(process.env.token);
