@@ -453,6 +453,10 @@ client.on('messageCreate', async (msg) => {
                 collection[i] = (+i + +1) + collection[i].substring(separatorPos);
             }
 
+            // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
+            if (msg.author.id == benUserId) {
+                grantAllowance();
+            }
 
         } else if (msg.content.toLowerCase().startsWith("~remove")) {
             msg.channel.sendTyping();
@@ -503,6 +507,24 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         generalChannel.send(newState.member.displayName + " has gone live!");
     }
 });
+
+async function grantAllowance() {
+    let voiceChannel = await client.channels.fetch("702142443608473603");
+    let membersArray = Array.from(voiceChannel.members.values());
+    var membersList = "";
+    for (let i = 0; i < membersArray.length; i++) {
+        if (i > 0) {
+            if (i == membersArray.length - 1) {
+                membersList += " & ";
+            } else {
+                membersList += ", ";
+            }
+        }
+        membersList += membersArray[i].displayName;
+        addToBalanceForUserId(membersArray[i].id, 10);
+    }
+    addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + membersList + " got their ₿10 allowance.");
+}
 
 client.on('messageReactionAdd', async(reaction, user) => {
     if (reaction.message.author.id != user.id && reaction.emoji.id){
