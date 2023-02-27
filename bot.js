@@ -47,8 +47,10 @@ const faceEmotes = [
 const gunUserId = "938529523811627038";
 const benUserId = "410621256140980225";
 const geneUserId = "282597947064057856";
+const generalChannelId = "702142443608473602";
 const ledgerChannelId = "1072168363129835560";
 const scoreboardChannelId = "712134924815040522";
+const voiceChannelId = "702142443608473603";
 const emoteOwnershipMessageId = "1072279118944673872";
 const transactionHistoryMessageId = "1072279127291334767";
 
@@ -83,6 +85,12 @@ var emoteOwnershipMap = new Map();
 var accountBalancesMap = new Map();
 
 client.login(process.env.token);
+
+// async function initializeMessages() { // Used for initializing or editing any template messages on startup
+//     let scoreboardChannel = await client.channels.fetch(scoreboardChannelId);
+//     let collection = await getMovieCollection(scoreboardChannel);
+//     await updateScoreBoard(collection, scoreboardChannel);
+// }
 
 client.on('ready', () => {
     // initializeMessages();
@@ -261,10 +269,6 @@ client.on('messageCreate', async (msg) => {
         return;
     }
 
-    // if (msg.content.startsWith("~test")) {
-    //     await deleteMsgs(msg.channel);
-    //     return;
-    // }
     if (msg.content.startsWith("~delete")) {
         if (msg.author.id != geneUserId && msg.author.id != benUserId) {
             return;
@@ -475,7 +479,7 @@ client.on('messageCreate', async (msg) => {
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (newState.streaming && newState.channel != null && !oldState.streaming) {
         const currentTimestamp = Date.now();
-        const generalChannel = await client.channels.fetch("702142443608473602");
+        const generalChannel = await client.channels.fetch(generalChannelId);
         const messages = await generalChannel.messages.fetch({ limit: 15 }); // Check last 15 messages
 
         for( let message of messages ) {
@@ -491,7 +495,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 });
 
 async function grantAllowance() {
-    let voiceChannel = await client.channels.fetch("702142443608473603");
+    let voiceChannel = await client.channels.fetch(voiceChannelId);
     let membersArray = Array.from(voiceChannel.members.values());
     var membersList = "";
     for (let i = 0; i < membersArray.length; i++) {
