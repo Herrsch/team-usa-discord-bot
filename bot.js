@@ -82,6 +82,8 @@ function Emote(id, owner, value) {
 var emoteOwnershipMap = new Map();
 var accountBalancesMap = new Map();
 
+client.login(process.env.token);
+
 client.on('ready', () => {
     // initializeMessages();
     initializeAccountBalances();
@@ -593,5 +595,3 @@ function randomFaceIndex() {
     max = Math.floor(faceEmotes.length);
     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
 }
-
-client.login(process.env.token);
