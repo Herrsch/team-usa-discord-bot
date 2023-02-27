@@ -48,6 +48,7 @@ const gunUserId = "938529523811627038";
 const benUserId = "410621256140980225";
 const geneUserId = "282597947064057856";
 const ledgerChannelId = "1072168363129835560";
+const scoreboardChannelId = "712134924815040522";
 const emoteOwnershipMessageId = "1072279118944673872";
 const transactionHistoryMessageId = "1072279127291334767";
 
@@ -428,7 +429,7 @@ client.on('messageCreate', async (msg) => {
         }
     }
     
-    if (msg.channel.id === "712134924815040522" ) { // Scoreboard channel
+    if (msg.channel.id === scoreboardChannelId) {
         var collection = await getMovieCollection(msg.channel);
         var separatorPos = msg.content.search(" "); // The first space after the bot command
         if (separatorPos < 0) {
