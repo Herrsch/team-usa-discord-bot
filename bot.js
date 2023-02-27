@@ -359,25 +359,6 @@ client.on('messageCreate', async (msg) => {
             shoot(msg, 60 * 1000);
         }
 
-        // if (msg.content.startsWith("~allowance")) {
-        //     const mentionedUserIds = Array.from( msg.mentions.members.keys() );
-        //     var amountToSend = msg.content.split(" ");
-        //     amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
-    
-        //     if (isNaN(amountToSend)) {
-        //         msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
-        //         return;
-        //     }
-    
-        //     for (let i = 0; i < mentionedUserIds.length; i++) {
-        //         const toUser = mentionedUserIds[i];
-    
-        //         addToBalanceForUserId(toUser, amountToSend);
-        //         msg.channel.send("Added ₿" + amountToSend.toLocaleString("en-US") + " to " + msg.mentions.members.get(toUser).displayName + "'s balance.");
-        //     }
-        //     return;
-        // }
-
         if (msg.content.startsWith("~tip")) {
             msg.channel.sendTyping();
             const fromUser = msg.member.id;
@@ -409,6 +390,29 @@ client.on('messageCreate', async (msg) => {
                 updateBalanceForUserId(toUser, toUserBalance);
                 msg.channel.send(msg.member.displayName + " sends " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend + ".\n" + msg.member.displayName + "'s balance: ₿" + fromUserBalance + "\n" + msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + toUserBalance);
                 addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " sent " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
+            }
+            return;
+        }
+
+        if (msg.content.startsWith("~bonus")) {
+            if (msg.author.id != geneUserId && msg.author.id != benUserId) {
+                msg.channel.send("~shoot <@" + msg.author.id + ">");
+                return;
+            }
+            const mentionedUserIds = Array.from( msg.mentions.members.keys() );
+            var amountToSend = msg.content.split(" ");
+            amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
+    
+            if (isNaN(amountToSend)) {
+                msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+                return;
+            }
+    
+            for (let i = 0; i < mentionedUserIds.length; i++) {
+                const toUser = mentionedUserIds[i];
+    
+                addToBalanceForUserId(toUser, amountToSend);
+                msg.channel.send("Added ₿" + amountToSend.toLocaleString("en-US") + " to " + msg.mentions.members.get(toUser).displayName + "'s balance.\nNew current balance: ₿" + accountBalancesMap.get(toUser).toLocaleString("en-US") + ".");
             }
             return;
         }
