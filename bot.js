@@ -299,7 +299,9 @@ client.on('messageCreate', async (msg) => {
         if (emoteToBuy == "") {
             return;
         } else if (emoteToBuy == gunEmote || emoteToBuy == gunEmote2) {
-            msg.channel.send("~shoot <@" + msg.author.id + ">");
+            if (msg.author.id != benUserId) {
+                msg.channel.send("~shoot <@" + msg.author.id + ">");
+            }
             return;
         }
         var emoteId = emoteToBuy.substring(3);
@@ -307,7 +309,9 @@ client.on('messageCreate', async (msg) => {
 
         var serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
         if (serverEmote == null || !serverEmote.available) {
-            msg.channel.send("~shoot <@" + msg.author.id + ">");
+            if (msg.author.id != benUserId) {
+                msg.channel.send("~shoot <@" + msg.author.id + ">");
+            }
             return;
         }
         msg.channel.sendTyping();
