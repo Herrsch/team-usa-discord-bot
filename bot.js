@@ -132,27 +132,6 @@ async function initializeEmoteOwnership() {
     }
 }
 
-/*
-async function initializeMessages() { // Used for initializing or editing any template messages on startup
-    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    // const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
-    // transactionHistoryMessage.edit("Transaction history:\n\nnone\n\nnone\n\nnone\n\nnone\n\nnone");
-
-//     const emoteOwnershipMessage = await ledgerChannel.messages.fetch(emoteOwnershipMessageId);
-//     emoteOwnershipMessage.edit("Unowned emotes: <:thomasiamcompletelyspeechless:847300197548556318> (₿1) | <:howembarrassing:815755068375826545> (₿1)\
-//  | <:announcement:847274686135664640> (₿1) | <:myqueen:804950697883205633> (₿1) | <:dunkaccino:790367046868140053> (₿1) | <:momwasrightaboutyou:919799591669497927> (₿1) | \
-//  <:lola:794015396121280522> (₿1) | <:nathanielbait:852338398273470505> (₿1) | <:bust:954607891476807740> (₿1) | <:yousureaboutthat:810692238472249345> (₿1) | <:gooby:791486603595874366> (₿1) | \
-//  <:ploggers:816871218837323786> (₿1) | <:pleasestop:897146206105530378> (₿1) | <:lazarwolf:955293614907465738> (₿1) | <:stung:967970671797887016> (₿1) | <:preach:890421423468871720> (₿1) | \
-//  <:escape:872580606339469404> (₿1) | <:Jeb:788583309075939381> (₿1) | <:fast:788527751610892308> (₿1) | <:dontmakemekillyou:837140610212823050> (₿1) | <:nuntooshabby:808199411053756426>\
-//  (₿1) | <:yikes:810686117891932170> (₿1) | <:squattersrights:869787818287841300> (₿1) | <:poggers:810693855933759518> (₿1) | <:codepurple:906366020153913454> (₿1) | <:chromebook:788964896309903370>\
-//  (₿1) | <:trapped:805608831535153221> (₿1) | <:uhoh:795491005406380034> (₿1) | <:goodboy:1071996889312014386> (₿1) | <:ted:788578667072716811> (₿1)\
-//  | <:illhave:985732884679774208> (₿1) | <:theman:985732908528574475> (₿1) | <:sizedmeat:985732897094914168> (₿1) | <:balls:985732868397498408> (₿1)");
-
-    // const commandsMessage = await ledgerChannel.messages.fetch("1072279135709311046");
-    // commandsMessage.edit("Commands:\n`~tip @user #`\n`~bid :emotename: #`");
-}
-*/
-
 async function getMovieCollection(channel) {
     const message = await channel.messages.fetch(scoreboardMessageIds[0]);
     var movieCollection = message.content.split("\n");
@@ -587,7 +566,7 @@ async function updateScoreBoard(movieCollection, channel) {
     var scoreboardMessageCharCount = 0;
 
     for (let i = 0; i < movieCollection.length; i++) {
-        if (scoreboardMessageCharCount + movieCollection[i].length + 2 > 2000) {
+        if (scoreboardMessageCharCount + movieCollection[i].length + 1 > 2000) {
             await channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
 
             scoreboardMessageIndex++;
@@ -598,8 +577,8 @@ async function updateScoreBoard(movieCollection, channel) {
             }
         }
         if (scoreboardMessageCharCount > 0) {
-            scoreboardMessageContent += "\n"; // Unsure whether a newline counts as one or two characters
-            scoreboardMessageCharCount += 2;
+            scoreboardMessageContent += "\n"; // Newline only counts as one character
+            scoreboardMessageCharCount += 1;
         }
 
         scoreboardMessageContent += movieCollection[i];
