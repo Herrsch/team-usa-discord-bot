@@ -166,15 +166,13 @@ async function getMovieCollection(channel) {
     return movieCollection;
 }
 
-function updateBalanceForUserId(userId, newBalance, updatePost) {
+function updateBalanceForUserId(userId, newBalance) {
     accountBalancesMap.set(userId, newBalance);
 
-    if (updatePost) {
-        updateBalancePostForUserId(userId);
-    }
+    updateBalancePostForUserId(userId);
 }
 
-function addToBalanceForUserId(userId, amountToAdd, updatePost) {
+function addToBalanceForUserId(userId, amountToAdd) {
     if (!accountBalancesMap.has(userId)) {
         return;
     }
@@ -182,9 +180,7 @@ function addToBalanceForUserId(userId, amountToAdd, updatePost) {
     let newBalance = accountBalancesMap.get(userId) + amountToAdd;
     accountBalancesMap.set(userId, newBalance);
 
-    if (updatePost) {
-        updateBalancePostForUserId(userId);
-    }
+    updateBalancePostForUserId(userId);
 }
 
 async function updateBalancePostForUserId(userId) {
@@ -344,7 +340,7 @@ client.on('messageCreate', async (msg) => {
             }
 
             previousOwner = currentEmoteProperties.owner;
-            addToBalanceForUserId(previousOwner, currentEmoteProperties.value, true);
+            addToBalanceForUserId(previousOwner, currentEmoteProperties.value);
         }
 
         emoteOwnershipMap.set(emoteToBuy, new Emote(emoteToBuy, biddingUser, bidAmount));
@@ -353,7 +349,7 @@ client.on('messageCreate', async (msg) => {
         updateEmoteOwnershipMessage();
 
         // charge bidder
-        addToBalanceForUserId(biddingUser, -bidAmount, true);
+        addToBalanceForUserId(biddingUser, -bidAmount);
         // refund old owner
         if (previousOwner != null) {
             msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + "!");
@@ -419,8 +415,8 @@ client.on('messageCreate', async (msg) => {
                 fromUserBalance -= amountToSend;
                 toUserBalance += amountToSend;
 
-                updateBalanceForUserId(fromUser, fromUserBalance, true);
-                updateBalanceForUserId(toUser, toUserBalance, true);
+                updateBalanceForUserId(fromUser, fromUserBalance);
+                updateBalanceForUserId(toUser, toUserBalance);
                 msg.channel.send(msg.member.displayName + " sends " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend + ".\n" + msg.member.displayName + "'s balance: ₿" + fromUserBalance + "\n" + msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + toUserBalance);
                 addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " sent " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
             }
@@ -541,7 +537,7 @@ async function giveEmoteOwnerRoyalties(emoteId, userId) {
     if (emoteOwner == userId) {
         return;
     } else {
-        addToBalanceForUserId(emoteOwner, 1, true);
+        addToBalanceForUserId(emoteOwner, 1);
         trackInterestInTransactionHistory(emoteOwner, emoteId);
     }
 }
