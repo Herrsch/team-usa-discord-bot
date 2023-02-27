@@ -421,6 +421,7 @@ client.on('messageCreate', async (msg) => {
             return;
         }
         const movieEntry = msg.content.substring(separatorPos + 1); // The sent message with the bot command excluded
+        var confirmationText = "";
 
         if (msg.content.toLowerCase().startsWith("~add")) {
             separatorPos = movieEntry.search(" ");
@@ -440,13 +441,20 @@ client.on('messageCreate', async (msg) => {
             }
 
             // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
+            var membersList = "";
             if (msg.author.id == benUserId) {
-                grantAllowance();
+                membersList = await grantAllowance();
+            }
+            if (membersList != "") {
+                confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ".";
+            } else {
+                confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ".";
             }
 
         } else if (msg.content.toLowerCase().startsWith("~remove")) {
             msg.channel.sendTyping();
             const newMovieNumber = movieEntry.match(/\d/g).join("");
+            let oldMovieName = collection[newMovieNumber - 1];
             collection.splice(newMovieNumber - 1, 1);
             for (let i = newMovieNumber - 1; i < collection.length; i++) {
                 separatorPos = collection[i].indexOf(".");
@@ -454,6 +462,7 @@ client.on('messageCreate', async (msg) => {
                 collection[i] = (+i + +1) + collection[i].substring(separatorPos);
             }
 
+            confirmationText = "Removed rank #" + oldMovieName + ".";
             
         } else if (msg.content.toLowerCase().startsWith("~update")) {
             separatorPos = movieEntry.search(" ");
@@ -464,15 +473,20 @@ client.on('messageCreate', async (msg) => {
 
             const newMovieNumber = movieEntry.substring(0, separatorPos).match(/\d/g).join("");
             const newMovieTitle = movieEntry.substring(separatorPos + 1);
+            const oldMovieTitle = collection[newMovieNumber - 1];
 
             collection[newMovieNumber - 1] = newMovieNumber + ". " + newMovieTitle;
 
+            confirmationText = "Updated rank #" + oldMovieTitle + " to " + newMovieTitle + ".";
         } else {
             return;
         }
 
         updateScoreBoard(collection, msg.channel);
         msg.delete();
+        msg.channel.send(confirmationText).then(confirmationMessage => {
+            setTimeout(() => confirmationMessage.delete(), 10000)
+        });
     }
 });
 
@@ -509,7 +523,10 @@ async function grantAllowance() {
         membersList += membersArray[i].displayName;
         addToBalanceForUserId(membersArray[i].id, 10);
     }
-    addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + membersList + " got their ₿10 allowance.");
+    if (membersArray.length > 0) {
+        addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + membersList + " got their ₿10 allowance.");
+    }
+    return membersList;
 }
 
 client.on('messageReactionAdd', async(reaction, user) => {
