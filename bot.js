@@ -1,4 +1,4 @@
-const { Client, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { Discord, Client, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ModalBuilder, TextInputBuilder } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions] });
 require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
@@ -85,11 +85,29 @@ var accountBalancesMap = new Map();
 
 client.login(process.env.token);
 
-// async function initializeMessages() { // Used for initializing or editing any template messages on startup
-//     let scoreboardChannel = await client.channels.fetch(scoreboardChannelId);
-//     let collection = await getMovieCollection(scoreboardChannel);
-//     await updateScoreBoard(collection, scoreboardChannel);
-// }
+async function initializeMessages() { // Used for initializing or editing any template messages on startup
+    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
+    const messag = await ledgerChannel.messages.fetch("1072279123185127534");
+
+    const addToWheelButton = new ButtonBuilder()
+                            .setCustomId("addToWheelButton")
+                            .setLabel("(₿100) Add any movie to the wheel immediately")
+                            .setStyle(ButtonStyle.Primary);
+
+    const yourChoiceNextButton = new ButtonBuilder()
+                                .setCustomId("yourChoiceNextButton")
+                                .setLabel("(₿200) You choose the movie for next movie night")
+                                .setStyle(ButtonStyle.Success);
+
+    const vetoButton = new ButtonBuilder()
+                           .setCustomId("vetoButton")
+                           .setLabel("(₿300) Veto this week's movie")
+                           .setStyle(ButtonStyle.Danger);
+
+    const row = new ActionRowBuilder().addComponents(addToWheelButton, yourChoiceNextButton, vetoButton);
+    
+    messag.edit({content: "**~The ₿offo Boutique~**", components:[row]});
+}
 
 client.on('ready', () => {
     // initializeMessages();
@@ -265,7 +283,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.isButton()) {
         const userId = interaction.member.id;
         const userDisplayName = interaction.member.displayName;
-    
+        
         if (interaction.component.customId === "addToWheelButton") {
             if (accountBalancesMap.get(userId) < 100) {
                 interaction.reply(userDisplayName + " can't afford to add a movie to the wheel!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
