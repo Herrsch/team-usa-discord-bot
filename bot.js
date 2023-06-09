@@ -1,4 +1,4 @@
-const { Discord, Client, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ModalBuilder, TextInputBuilder } = require('discord.js');
+const { Client, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions] });
 require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
@@ -87,7 +87,7 @@ client.login(process.env.token);
 
 async function initializeMessages() { // Used for initializing or editing any template messages on startup
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    const messag = await ledgerChannel.messages.fetch("1072279123185127534");
+    // const messag = await ledgerChannel.messages.fetch("1072279123185127534");
 
     const addToWheelButton = new ButtonBuilder()
                             .setCustomId("addToWheelButton")
@@ -106,7 +106,7 @@ async function initializeMessages() { // Used for initializing or editing any te
 
     const row = new ActionRowBuilder().addComponents(addToWheelButton, yourChoiceNextButton, vetoButton);
     
-    messag.edit({content: "**~The ₿offo Boutique~**", components:[row]});
+    ledgerChannel.send({content: "**~The ₿offo Boutique~**", components:[row]});
 }
 
 client.on('ready', () => {
