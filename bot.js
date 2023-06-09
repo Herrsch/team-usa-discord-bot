@@ -1,7 +1,5 @@
-const Discord = require('discord.js');
-const client = new Discord.Client({
-    intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_VOICE_STATES", "GUILD_MESSAGE_REACTIONS"]
-});
+const { Client, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions] });
 require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
 
