@@ -45,11 +45,13 @@ const gunUserId = "938529523811627038";
 const benUserId = "410621256140980225";
 const geneUserId = "282597947064057856";
 const generalChannelId = "702142443608473602";
-const ledgerChannelId = "1072168363129835560";
+const suggestionsChannelId = "704484111967846452";
 const scoreboardChannelId = "712134924815040522";
+const ledgerChannelId = "1072168363129835560";
 const voiceChannelId = "702142443608473603";
 const emoteOwnershipMessageId = "1072279118944673872";
 const transactionHistoryMessageId = "1072279127291334767";
+const serverId = "702142442949967953";
 
 const scoreboardMessageIds = [
     "1047313677956681820",
@@ -93,7 +95,7 @@ client.on('ready', () => {
     // initializeMessages();
     initializeAccountBalances();
     initializeEmoteOwnership();
-    console.log('Logged in!');
+    console.log(`Logged in as ${client.user.tag}!`);
 });
 
 async function initializeAccountBalances() {
@@ -258,6 +260,131 @@ async function checkForEmotes(message) {
         await giveEmoteOwnerRoyalties(emotes[i], message.member.id);
     }
 }
+
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (interaction.isButton()) {
+        const userId = interaction.member.id;
+        const userDisplayName = interaction.member.displayName;
+    
+        if (interaction.component.customId === "addToWheelButton") {
+            if (accountBalancesMap.get(userId) < 100) {
+                interaction.reply(userDisplayName + " can't afford to add a movie to the wheel!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
+                return;
+            }
+
+            const modal = new ModalBuilder()
+            .setCustomId("addToWheelModal")
+            .setTitle("Add a movie to the wheel");
+
+            const movieTitleInput = new TextInputBuilder()
+            .setCustomId("addToWheelMovieTitleTextInput")
+            .setLabel("What movie will you add to the wheel?")
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder("Gooby");
+
+            const row = new ActionRowBuilder().addComponents(movieTitleInput);
+
+            modal.addComponents(row);
+
+            // Show the modal
+            await interaction.showModal(modal);
+
+        } else if (interaction.component.customId === "yourChoiceNextButton") {
+            if (accountBalancesMap.get(userId) < 200) {
+                interaction.reply(userDisplayName + " can't afford to choose next week's movie!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
+                return;
+            }
+
+            const modal = new ModalBuilder()
+            .setCustomId("chooseNextMovieModal")
+            .setTitle("Choose The Next Movie");
+
+            const movieTitleInput = new TextInputBuilder()
+            .setCustomId("chooseNextMovieTextInput")
+            .setLabel("What movie will we watch next?")
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder("Gooby");
+
+            const row = new ActionRowBuilder().addComponents(movieTitleInput);
+
+            modal.addComponents(row);
+
+            // Show the modal
+            await interaction.showModal(modal);
+            
+        } else if (interaction.component.customId === "vetoButton") {
+            if (accountBalancesMap.get(userId) < 300) {
+                interaction.reply(userDisplayName + " failed to veto this week's movie because they're too broke! Embarrassing!!!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
+                return;
+            }
+
+
+            const vetoConfirmButton = new ButtonBuilder()
+            .setCustomId("vetoConfirmButton")
+            .setLabel("Yes")
+            .setStyle(ButtonStyle.Danger);
+
+            const vetoCancelButton = new ButtonBuilder()
+            .setCustomId("vetoCancelButton")
+            .setLabel("No")
+            .setStyle(ButtonStyle.Secondary);
+
+            const row = new ActionRowBuilder().addComponents(vetoConfirmButton, vetoCancelButton);
+
+            const response = await interaction.reply({
+                content: "<@" + userId + "> are you sure you want to veto this week's movie?",
+                components: [row],
+                ephemeral:true
+            });
+
+            try {
+                const confirmation = await response.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
+
+                if (confirmation.customId === 'vetoConfirmButton' && accountBalancesMap.get(userId) >= 300) {
+                    addToBalanceForUserId(userId, -300);
+                    await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+
+                    addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@"+userId+"> paid added ₿300 to veto this week's movie.");
+
+                    const generalChannel = await client.channels.fetch(generalChannelId);
+                    await generalChannel.send("<@" + userId + "> has paid ₿300 to veto this week's movie!");
+
+                    const guild = await client.guilds.fetch(serverId);
+                    var serverMembers = await guild.members.fetch();
+                    // Filter out Ben, Gun and the user that vetoed
+                    serverMembers = serverMembers.filter(member => member.id != benUserId && member.id != gunUserId && member.id != userId);
+                    let serverMemberIds = serverMembers.map(member => member.id);
+
+                    // Shoot everyone on the server
+                    await generalChannel.send("~shoot <@" + serverMemberIds.join("> <@") + ">");
+                    
+                } else if (confirmation.customId === 'vetoCancelButton') {
+                    await confirmation.update({ content: 'Veto cancelled.', components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
+                }
+            } catch (e) {
+                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling.', components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
+            }
+        }
+    } else if (interaction.isModalSubmit()) {
+        const userId = interaction.member.id;
+
+        if (interaction.customId == "addToWheelModal") {
+            const movieTitle = interaction.fields.getTextInputValue("addToWheelMovieTitleTextInput");
+
+            addToBalanceForUserId(userId, -100);
+            client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel!"));
+            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel.");
+            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+        } else if (interaction.customId == "chooseNextMovieModal") {
+            const movieTitle = interaction.fields.getTextInputValue("chooseNextMovieTextInput");
+
+            addToBalanceForUserId(userId, -200);
+            client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night!"));
+            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
+            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+        }
+    }
+});
 
 client.on('messageCreate', async (msg) => {
     if (msg.content.charAt(0) != '~' &&
