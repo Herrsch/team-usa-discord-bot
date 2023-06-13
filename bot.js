@@ -142,6 +142,8 @@ async function initializeEmoteOwnership() {
 
         const emotes = thisOwnershipLine.match(/<:.+?:\d+>/g);
 
+        let emotesWereRemoved = false;
+
         if (emotes == null) {
             continue;
         }
@@ -151,10 +153,29 @@ async function initializeEmoteOwnership() {
             var emotePrice = thisOwnershipLine.substring(emoteStringIndex + emotes[j].length + 1);
             var regExp = /\(([^)]+)\)/;
             emotePrice = regExp.exec(emotePrice)[1];
-            var priceLength = emotePrice.length;
             emotePrice = parseInt(emotePrice.match(/\d/g).join(""));
 
+            // Check if this emote is still included on this server, and if not, refund the owner
+            let emoteId = emotes[j].substring(2);
+            emoteId = emoteId.substring(emoteId.search(':') + 1);
+            emoteId = emoteId.substring(0, emoteId.length - 1);
+            let guildEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
+            if (guildEmote == undefined) {
+                addToBalanceForUserId(emoteOwnerId, emotePrice);
+
+                let emoteName = emotes[j].substring(2);
+                emoteName = emoteName.substring(0, emoteName.search(':'));
+
+                addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@" + emoteOwnerId + "> was refunded ₿" + emotePrice + " for " + emoteName);
+                emotesWereRemoved = true;
+                continue;
+            }
+
             emoteOwnershipMap.set(emotes[j], new Emote(emotes[j], emoteOwnerId, emotePrice));
+        }
+        
+        if (emotesWereRemoved) {
+            updateEmoteOwnershipMessage();
         }
     }
 }
