@@ -634,14 +634,14 @@ client.on(Events.GuildEmojiDelete, async (emoji) => {
     let emoteName = emoji.name;
 
     let emoteFullName = "<:" + emoteName + ":" + emoteId + ">";
-    // If an emoji being deleted is owned, refund the owner
+    // If the emoji being deleted is owned, remove it from the ownership map
     if (emoteOwnershipMap.has(emoteFullName)) {
+        
+        // Post the emote's value, and the previous owner
         const emoteProperties = emoteOwnershipMap.get(emoteFullName);
-
-        addToBalanceForUserId(emoteProperties.owner, emoteProperties.value);
-
-        addToTransactionHistory("<@" + emoteProperties.owner + "> was refunded ₿" + emoteProperties.value + " for " + emoteName);
-
+        const generalChannel = await client.channels.fetch(generalChannelId);
+        generalChannel.send("<@" + emoteProperties.owner + "> lost ₿" + emoteProperties.value + " from the removal of :" + emoteName + ":!");
+        
         emoteOwnershipMap.delete(emoteFullName);
         updateEmoteOwnershipMessage();
     }
