@@ -192,6 +192,9 @@ async function addToTransactionHistory(transactionToAdd) {
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
     const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
 
+    // Add timestamp to the new transaction
+    transactionToAdd = "<t:" + parseInt(Date.now() / 1000) + ":f>" + transactionToAdd;
+
     var transactions = transactionHistoryMessage.content.split("\n\n");
     transactions.pop();
     transactions.splice(1, 0, transactionToAdd);
@@ -235,7 +238,7 @@ async function trackInterestInTransactionHistory(userId, emote) {
     }
 
     // If we make it here, there wasn't an interest message to update
-    addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@" + userId + "> gained interest from " + emote + ": ₿1.");
+    addToTransactionHistory("<@" + userId + "> gained interest from " + emote + ": ₿1.");
 }
 
 async function checkForEmotes(message) {
@@ -332,7 +335,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     addToBalanceForUserId(userId, -300);
                     await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
-                    addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@"+userId+"> paid added ₿300 to veto this week's movie.");
+                    addToTransactionHistory("<@"+userId+"> paid added ₿300 to veto this week's movie.");
 
                     const generalChannel = await client.channels.fetch(generalChannelId);
                     await generalChannel.send("<@" + userId + "> has paid ₿300 to veto this week's movie!");
@@ -361,14 +364,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
             addToBalanceForUserId(userId, -100);
             client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel!"));
-            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel.");
+            addToTransactionHistory("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel.");
             interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         } else if (interaction.customId == "chooseNextMovieModal") {
             const movieTitle = interaction.fields.getTextInputValue("chooseNextMovieTextInput");
 
             addToBalanceForUserId(userId, -200);
             client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night!"));
-            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
+            addToTransactionHistory("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
             interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         }
     }
@@ -455,10 +458,10 @@ client.on('messageCreate', async (msg) => {
         // refund old owner
         if (previousOwner != null) {
             msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + "!");
-            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " acquired " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + ".");
+            addToTransactionHistory(msg.member.displayName + " acquired " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + ".");
         } else {
             msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " for ₿" + bidAmount + "!");
-            addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " acquired " + emoteToBuy + " for ₿" + bidAmount + ".");
+            addToTransactionHistory(msg.member.displayName + " acquired " + emoteToBuy + " for ₿" + bidAmount + ".");
         }
     }
 
@@ -503,7 +506,7 @@ client.on('messageCreate', async (msg) => {
                 updateBalanceForUserId(fromUser, fromUserBalance);
                 updateBalanceForUserId(toUser, toUserBalance);
                 msg.channel.send(msg.member.displayName + " sends " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend + ".\n" + msg.member.displayName + "'s balance: ₿" + fromUserBalance + "\n" + msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + toUserBalance);
-                addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + msg.member.displayName + " sent " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
+                addToTransactionHistory(msg.member.displayName + " sent " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
             }
             return;
         }
@@ -637,7 +640,7 @@ client.on(Events.GuildEmojiDelete, async (emoji) => {
 
         addToBalanceForUserId(emoteProperties.owner, emoteProperties.value);
 
-        addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> <@" + emoteProperties.owner + "> was refunded ₿" + emoteProperties.value + " for " + emoteName);
+        addToTransactionHistory("<@" + emoteProperties.owner + "> was refunded ₿" + emoteProperties.value + " for " + emoteName);
 
         emoteOwnershipMap.delete(emoteFullName);
         updateEmoteOwnershipMessage();
@@ -660,7 +663,7 @@ async function grantAllowance() {
         addToBalanceForUserId(membersArray[i].id, 10);
     }
     if (membersArray.length > 0) {
-        addToTransactionHistory("<t:" + parseInt(Date.now() / 1000) + ":f> " + membersList + " got their ₿10 allowance.");
+        addToTransactionHistory(membersList + " got their ₿10 allowance.");
     }
     return membersList;
 }
