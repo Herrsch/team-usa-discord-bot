@@ -5,40 +5,11 @@ require('dotenv').config();
 
 const gunEmote = "<:kaboom:938830966800150539>";
 const gunEmote2 = "<:kaboom2:938856552532676678>";
-const faceEmotes = [
-     "<:Garrett:815754301224779797>",
-     "<:Jeb:788583309075939381>",
-     "<:announcement:847274686135664640>",
-     "<:beep:788578684336472068>",
-     "<:chromebook:788964896309903370>",
-     "<:codepurple:906366020153913454>",
-     "<:dey:886797975572086835>",
-     "<:dontmakemekillyou:837140610212823050>",
-     "<:fast:788527751610892308>",
-     "<:gooby:791486603595874366>",
-     "<:howembarrassing:815755068375826545>",
-     "<:lola:794015396121280522>",
-     "<:mano:788578649452052540>",
-     "<:momwasrightaboutyou:919799591669497927>",
-     "<:myqueen:804950697883205633>",
-     "<:nathanielbait:852338398273470505>",
-     "<:nuntooshabby:808199411053756426>",
-     "<:pleasestop:897146206105530378>",
-     "<:ploggers:816871218837323786>",
-     "<:poggers:810693855933759518>",
-     "<:preach:890421423468871720>",
-     "<:squattersrights:869787818287841300>",
-     "<:ted:788578667072716811>",
-     "<:thomasiamcompletelyspeechless:847300197548556318>",
-     "<:trapped:805608831535153221>",
-     "<:uhoh:795491005406380034>",
-     "<:yikes:810686117891932170>",
-     "<:yousureaboutthat:810692238472249345>",
-     "<:bust:954607891476807740>",
-     "<:lazarwolf:955293614907465738>",
-     "<:stung:967970671797887016>",
-     "<:goodboy:1071996889312014386>",
-     "<:awooga:1120150222195130399>"
+const nonFaceEmotes = [
+    "938830966800150539", // gunEmote (kaboom)
+    "938856552532676678", // gunEmote (kaboom2)
+    "790367046868140053", // dunkaccino
+    "872580606339469404" // escape (leave server)
 ];
 
 const gunUserId = "938529523811627038";
@@ -449,10 +420,10 @@ client.on('messageCreate', async (msg) => {
         var bidAmount = msg.content.split(" ");
         bidAmount = parseInt(bidAmount[bidAmount.length - 1].match(/\d/g).join(""));
         if (isNaN(bidAmount)) {
-            msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+            msg.channel.send("Invalid amount! " + randomFaceEmote());
             return;
         } else if (bidAmount > biddingUserBalance) {
-            msg.channel.send("Insufficient funds! " + faceEmotes[randomFaceIndex()]);
+            msg.channel.send("Insufficient funds! " + randomFaceEmote());
             return;
         }
 
@@ -466,7 +437,7 @@ client.on('messageCreate', async (msg) => {
             }
             // Make sure new user can afford
             if (currentEmoteProperties.value >= bidAmount) {
-                msg.channel.send("Bid amount must be higher than ₿" + currentEmoteProperties.value + "! " + faceEmotes[randomFaceIndex()]);
+                msg.channel.send("Bid amount must be higher than ₿" + currentEmoteProperties.value + "! " + randomFaceEmote());
                 return;
             }
 
@@ -510,7 +481,7 @@ client.on('messageCreate', async (msg) => {
             amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
 
             if (isNaN(amountToSend)) {
-                msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+                msg.channel.send("Invalid amount! " + randomFaceEmote());
                 return;
             }
 
@@ -518,9 +489,11 @@ client.on('messageCreate', async (msg) => {
                 const toUser = mentionedUserIds[i];
                 var toUserBalance = accountBalancesMap.get(toUser);
                 
-                if (amountToSend > fromUserBalance ||
-                    fromUser == toUser ||
-                    fromUserBalance - amountToSend < 0) {
+                if (amountToSend > fromUserBalance) {
+                    msg.reply("You only have ₿" + fromUserBalance + "! " + randomFaceEmote());
+                    return;
+                } else if (fromUser == toUser) {
+                    msg.channel.send("~shoot <@" + fromUser + ">");
                     return;
                 }
 
@@ -545,7 +518,7 @@ client.on('messageCreate', async (msg) => {
             amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
     
             if (isNaN(amountToSend)) {
-                msg.channel.send("Invalid amount! " + faceEmotes[randomFaceIndex()]);
+                msg.channel.send("Invalid amount! " + randomFaceEmote());
                 return;
             }
     
@@ -715,7 +688,7 @@ async function giveEmoteOwnerRoyalties(emoteId, userId) {
 function shoot(msg, timeoutDuration) {
 
     var backfire = false;
-    var shootMessage = faceEmotes[randomFaceIndex()];
+    var shootMessage = randomFaceEmote();
     var tagMessage = "";
 
     msg.mentions.members.forEach( mentionedMember => {
@@ -774,8 +747,11 @@ async function updateScoreBoard(movieCollection, channel) {
     channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
 }
 
-function randomFaceIndex() {
-    min = Math.ceil(0);
-    max = Math.floor(faceEmotes.length);
-    return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+function randomFaceEmote() {
+    const faceEmotes = client.emojis.cache.filter((emoji) => !nonFaceEmotes.includes(emoji.id)).map(filteredEmoji => "<:" + filteredEmoji.name + ":" + filteredEmoji.id + ">");
+    
+    let min = Math.ceil(0);
+    let max = Math.floor(faceEmotes.length);
+    let index = Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+    return faceEmotes[index];
 }
