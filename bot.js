@@ -193,7 +193,7 @@ async function addToTransactionHistory(transactionToAdd) {
     const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
 
     // Add timestamp to the new transaction
-    transactionToAdd = "<t:" + parseInt(Date.now() / 1000) + ":f>" + transactionToAdd;
+    transactionToAdd = "<t:" + parseInt(Date.now() / 1000) + ":f> " + transactionToAdd;
 
     var transactions = transactionHistoryMessage.content.split("\n\n");
     transactions.pop();
