@@ -335,7 +335,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     addToBalanceForUserId(userId, -300);
                     await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
-                    addToTransactionHistory("<@"+userId+"> paid added ₿300 to veto this week's movie.");
+                    addToTransactionHistory("<@"+userId+"> paid ₿300 to veto this week's movie.");
 
                     const generalChannel = await client.channels.fetch(generalChannelId);
                     await generalChannel.send("<@" + userId + "> has paid ₿300 to veto this week's movie!");
