@@ -1,16 +1,18 @@
-# fly.toml file generated for team-usa-discord-bot on 2022-11-28T16:55:04-05:00
+# fly.toml app configuration file generated for team-usa-discord-bot on 2023-06-20T00:39:03-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
 app = "team-usa-discord-bot"
+primary_region = "ewr"
 kill_signal = "SIGINT"
-kill_timeout = 5
-processes = []
+kill_timeout = "5s"
+
+[experimental]
+  auto_rollback = true
 
 [build]
   builder = "heroku/buildpacks:20"
 
 [env]
   PORT = "8080"
-
-[experimental]
-  allowed_public_ports = []
-  auto_rollback = true
