@@ -58,7 +58,6 @@ client.login(process.env.token);
 
 async function initializeMessages() { // Used for initializing or editing any template messages on startup
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
-    // const messag = await ledgerChannel.messages.fetch("1072279123185127534");
 
     const addToWheelButton = new ButtonBuilder()
                             .setCustomId("addToWheelButton")
@@ -86,6 +85,8 @@ client.on('ready', () => {
     initializeEmoteOwnership();
     console.log(`Logged in as ${client.user.tag}!`);
 });
+
+// Copy/Paste point
 
 async function initializeAccountBalances() {
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
@@ -315,12 +316,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
             .setLabel("Yes")
             .setStyle(ButtonStyle.Danger);
 
+            const vetoConfirmWithShootButton = new ButtonBuilder()
+            .setCustomId("vetoConfirmWithShootButton")
+            .setLabel("Yes, and shoot @everyone")
+            .setStyle(ButtonStyle.Danger);
+
             const vetoCancelButton = new ButtonBuilder()
             .setCustomId("vetoCancelButton")
             .setLabel("No")
             .setStyle(ButtonStyle.Secondary);
 
-            const row = new ActionRowBuilder().addComponents(vetoConfirmButton, vetoCancelButton);
+            const row = new ActionRowBuilder().addComponents(vetoConfirmButton, vetoConfirmWithShootButton, vetoCancelButton);
 
             const response = await interaction.reply({
                 content: "<@" + userId + "> are you sure you want to veto this week's movie?",
@@ -331,7 +337,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             try {
                 const confirmation = await response.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
 
-                if (confirmation.customId === 'vetoConfirmButton' && accountBalancesMap.get(userId) >= 300) {
+                if ((confirmation.customId === 'vetoConfirmButton' || confirmation.customId === 'vetoConfirmWithShootButton') && accountBalancesMap.get(userId) >= 300) {
                     addToBalanceForUserId(userId, -300);
                     await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
@@ -340,14 +346,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     const generalChannel = await client.channels.fetch(generalChannelId);
                     await generalChannel.send("<@" + userId + "> has paid ₿300 to veto this week's movie!");
 
-                    const guild = await client.guilds.fetch(serverId);
-                    var serverMembers = await guild.members.fetch();
-                    // Filter out Ben, Gun and the user that vetoed
-                    serverMembers = serverMembers.filter(member => member.id != benUserId && member.id != gunUserId && member.id != userId);
-                    let serverMemberIds = serverMembers.map(member => member.id);
+                    if (confirmation.customId === 'vetoConfirmWithShootButton') {
+                        const guild = await client.guilds.fetch(serverId);
+                        var serverMembers = await guild.members.fetch();
+                        // Filter out Ben, Gun and the user that vetoed
+                        serverMembers = serverMembers.filter(member => member.id != benUserId && member.id != gunUserId && member.id != userId);
+                        let serverMemberIds = serverMembers.map(member => member.id);
 
-                    // Shoot everyone on the server
-                    await generalChannel.send("~shoot <@" + serverMemberIds.join("> <@") + ">");
+                        // Shoot everyone on the server
+                        await generalChannel.send("~shoot <@" + serverMemberIds.join("> <@") + ">");
+                    }
                     
                 } else if (confirmation.customId === 'vetoCancelButton') {
                     await confirmation.update({ content: 'Veto cancelled.', components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
