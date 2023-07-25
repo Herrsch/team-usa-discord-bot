@@ -548,6 +548,11 @@ client.on('messageCreate', async (msg) => {
         var separatorPos = msg.content.search(" "); // The first space after the bot command
         if (separatorPos < 0) {
             return;
+        } else if (collection.length <= 50) {
+            msg.channel.send("Error parsing the movie collection, canceling change.").then(errorMessage => {
+                setTimeout(() => errorMessage.delete(), 10000)
+            });
+            return;
         }
         const movieEntry = msg.content.substring(separatorPos + 1); // The sent message with the bot command excluded
         var confirmationText = "";
