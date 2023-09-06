@@ -56,7 +56,7 @@ var accountBalancesMap = new Map();
 
 client.login(process.env.token);
 
-async function initializeMessages() { // Used for initializing or editing any template messages on startup
+async function initializeStore() { // Used for initializing or editing any template messages on startup
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
 
     const addToWheelButton = new ButtonBuilder()
@@ -80,7 +80,7 @@ async function initializeMessages() { // Used for initializing or editing any te
 }
 
 client.on('ready', () => {
-    // initializeMessages();
+    // initializeStore();
     initializeAccountBalances();
     initializeEmoteOwnership();
     console.log(`Logged in as ${client.user.tag}!`);
