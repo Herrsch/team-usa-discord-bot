@@ -80,6 +80,19 @@ async function initializeStore() { // Used for initializing or editing any templ
     ledgerChannel.send({content: "**~The ₿offo Boutique~**", components:[row]});
 }
 
+async function initializeNewAccount() {
+    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
+    const newUserId = '153288298255613953';
+
+    await ledgerChannel.send("**~The Bank of ₿offos~\n  ~Canadian Branch~**\n~~                                          ~~");
+
+    await ledgerChannel.send('<@' + newUserId + '>:');
+
+    await ledgerChannel.send('₿100');
+    
+    await ledgerChannel.send("~~                                          ~~");
+}
+
 client.on('ready', () => {
     // initializeStore();
     initializeAccountBalances();
