@@ -88,7 +88,7 @@ async function initializeNewAccount() {
 
     await ledgerChannel.send('<@' + newUserId + '>:');
 
-    await ledgerChannel.send('₿100');
+    await ledgerChannel.send('₿100'); // Remember to get this message id and add it to boffoBalanceIDsMap
     
     await ledgerChannel.send("~~                                          ~~");
 }
