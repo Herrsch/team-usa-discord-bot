@@ -267,6 +267,12 @@ async function checkForEmotes(message) {
     }
 }
 
+// Helper function to easily fetch the general channel and send a message
+async function sendToGeneralChannel(message) {
+    const generalChannel = await client.channels.fetch(generalChannelId);
+    await generalChannel.send(message);
+}
+
 client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.isButton()) {
         const userId = interaction.member.id;
@@ -274,7 +280,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         
         if (interaction.component.customId === "addToWheelButton") {
             if (accountBalancesMap.get(userId) < 100) {
-                interaction.reply(userDisplayName + " can't afford to add a movie to the wheel!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
+                sendToGeneralChannel(userDisplayName + " can't afford to add a movie to the wheel!");
                 return;
             }
 
@@ -297,7 +303,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         } else if (interaction.component.customId === "yourChoiceNextButton") {
             if (accountBalancesMap.get(userId) < 200) {
-                interaction.reply(userDisplayName + " can't afford to choose next week's movie!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
+                sendToGeneralChannel(userDisplayName + " can't afford to choose next week's movie!");
                 return;
             }
 
@@ -320,7 +326,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             
         } else if (interaction.component.customId === "vetoButton") {
             if (accountBalancesMap.get(userId) < 300) {
-                interaction.reply(userDisplayName + " failed to veto this week's movie because they're too broke! Embarrassing!!!").then(errorMsg => {setTimeout(() => errorMsg.delete(), 10000)});
+                sendToGeneralChannel(userDisplayName + " failed to veto this week's movie because they're too broke! Embarrassing!!!");
                 return;
             }
 
@@ -345,7 +351,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const response = await interaction.reply({
                 content: "<@" + userId + "> are you sure you want to veto this week's movie?",
                 components: [row],
-                ephemeral:true
+                ephemeral:true,
+                fetchReply: true
             });
 
             try {
@@ -357,8 +364,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
                     addToTransactionHistory("<@"+userId+"> paid ₿300 to veto this week's movie.");
 
-                    const generalChannel = await client.channels.fetch(generalChannelId);
-                    await generalChannel.send("<@" + userId + "> has paid ₿300 to veto this week's movie!");
+                    await sendToGeneralChannel("<@" + userId + "> has paid ₿300 to veto this week's movie!");
 
                     if (confirmation.customId === 'vetoConfirmWithShootButton') {
                         const guild = await client.guilds.fetch(serverId);
@@ -368,14 +374,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         let serverMemberIds = serverMembers.map(member => member.id);
 
                         // Shoot everyone on the server
-                        await generalChannel.send("~shoot <@" + serverMemberIds.join("> <@") + ">");
+                        await sendToGeneralChannel("~shoot <@" + serverMemberIds.join("> <@") + ">");
                     }
                     
                 } else if (confirmation.customId === 'vetoCancelButton') {
                     await confirmation.update({ content: 'Veto cancelled.', components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
                 }
             } catch (e) {
-                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling.', components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
+                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling.', components: [] }).then(setTimeout(() => interaction.deleteReply(), 10000));
             }
         }
     } else if (interaction.isModalSubmit()) {
