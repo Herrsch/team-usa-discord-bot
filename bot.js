@@ -18,6 +18,7 @@ const geneUserId = "282597947064057856";
 const generalChannelId = "702142443608473602";
 const suggestionsChannelId = "704484111967846452";
 const scoreboardChannelId = "712134924815040522";
+const scoreboardArchiveChannelId = "1246524630034808893";
 const ledgerChannelId = "1072168363129835560";
 const voiceChannelId = "702142443608473603";
 const emoteOwnershipMessageId = "1072279118944673872";
@@ -402,6 +403,86 @@ client.on(Events.InteractionCreate, async (interaction) => {
             addToTransactionHistory("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
             interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         }
+    } else if (interaction.isChatInputCommand()) {
+        const command = interaction.client.commands.get(interaction.commandName);
+
+        if (!command) {
+            console.error(`No command matching ${interaction.commandName} was found.`);
+            return;
+        }
+
+        //
+        // Boffo commands
+        //
+        if (interaction.commandName == "tip") {
+            let fromUser = interaction.member;
+            let toUser = interaction.options.getUser("recipient");
+            let amount = interaction.options.getInteger("amount");
+            tip(fromUser, toUser, amount, interaction)
+            return;
+
+        } else if (interaction.commandName == "bid") {
+            let biddingUser = interaction.member;
+            var emoteToBuy = interaction.options.getString("emote");
+            emoteToBuy = emoteToBuy.substring(emoteToBuy.search("<"),emoteToBuy.search(">") + 1);
+            let bidAmount = interaction.options.getInteger("amount");
+            bid(biddingUser, emoteToBuy, bidAmount, interaction);
+            return;
+
+        } else if (interaction.commandName == "bonus") {
+            let fromUser = interaction.member;
+            let toUser = [interaction.guild.members.cache.get(interaction.options.getUser("recipient").id)];
+            let amount = interaction.options.getInteger("amount");
+            bonus(fromUser, toUser, amount, interaction)
+            return;
+
+        //
+        // Gun commands
+        //
+        } else if (interaction.commandName == "shoot") {
+            let target = [interaction.guild.members.cache.get(interaction.options.getUser("target").id)]
+            shoot(target, interaction.member, interaction, 15 * 1000)
+            return;
+
+        } else if (interaction.commandName == "kill") {
+            let target = [interaction.guild.members.cache.get(interaction.options.getUser("target").id)]
+            shoot(target, interaction.member, interaction, 60 * 1000)
+            return;
+
+        //
+        // Scoreboard updates
+        //
+        } else if (interaction.commandName == "add") {
+            if (interaction.channelId != scoreboardChannelId) {
+                interaction.reply({content:"This command can only be used in the scoreboard channel.", ephemeral:true})
+                return;
+            } 
+            let fromUserId = interaction.member.id;
+            let movieTitle = interaction.options.getString("movie");
+            let rank = interaction.options.getInteger("rank");
+            addMovieToScoreboard(rank, movieTitle, fromUserId, interaction);
+            return;
+
+        } else if (interaction.commandName == "remove") {
+            if (interaction.channelId != scoreboardChannelId) {
+                interaction.reply({content:"This command can only be used in the scoreboard channel.", ephemeral:true})
+                return;
+            } 
+            let rank = interaction.options.getInteger("rank");
+            removeMovieFromScoreboard(rank, interaction);
+            return;
+
+        } else if (interaction.commandName == "update") {
+            if (interaction.channelId != scoreboardChannelId) {
+                interaction.reply({content:"This command can only be used in the scoreboard channel.", ephemeral:true})
+                return;
+            } 
+            let currentRank = interaction.options.getInteger("currentrank");
+            let newRank = interaction.options.getInteger("newrank");
+            let newTitle = interaction.options.getString("newtitle");
+            updateMovieRankOnScoreboard(currentRank, newRank, newTitle, interaction);
+            return;
+        }
     }
 });
 
@@ -424,90 +505,32 @@ client.on('messageCreate', async (msg) => {
     }
 
     if (msg.content.startsWith("~bid")) {
+        const biddingUser = msg.member;
         const emoteToBuy = msg.content.substring(msg.content.search("<"), msg.content.search(">") + 1);
-        if (emoteToBuy == "") {
-            return;
-        } else if (emoteToBuy == gunEmote || emoteToBuy == gunEmote2) {
-            if (msg.author.id != benUserId) {
-                msg.channel.send("~shoot <@" + msg.author.id + ">");
-            }
-            return;
-        }
-        var emoteId = emoteToBuy.substring(3);
-        emoteId = emoteId.substring(emoteId.search(":") + 1, emoteId.search(">"));
-
-        var serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
-        if (serverEmote == null || !serverEmote.available) {
-            if (msg.author.id != benUserId) {
-                msg.channel.send("~shoot <@" + msg.author.id + ">");
-            }
-            return;
-        }
-        msg.channel.sendTyping();
-        // verify user has enough ₿ to bid on emote
-        const biddingUser = msg.member.id;
-        var biddingUserBalance = accountBalancesMap.get(biddingUser);
-
         var bidAmount = msg.content.split(" ");
         bidAmount = parseInt(bidAmount[bidAmount.length - 1].match(/\d/g).join(""));
         if (isNaN(bidAmount)) {
-            msg.channel.send("Invalid amount! " + randomFaceEmote());
-            return;
-        } else if (bidAmount > biddingUserBalance) {
-            msg.channel.send("Insufficient funds! " + randomFaceEmote());
+            msg.reply("Invalid amount! " + randomFaceEmote());
             return;
         }
 
-        // find current ownership
-        var previousOwner;
-        if (emoteOwnershipMap.has(emoteToBuy)) {
-            const currentEmoteProperties = emoteOwnershipMap.get(emoteToBuy);
-
-            if (currentEmoteProperties.owner == biddingUser) {
-                return;
-            }
-            // Make sure new user can afford
-            if (currentEmoteProperties.value >= bidAmount) {
-                msg.channel.send("Bid amount must be higher than ₿" + currentEmoteProperties.value + "! " + randomFaceEmote());
-                return;
-            }
-
-            previousOwner = currentEmoteProperties.owner;
-            addToBalanceForUserId(previousOwner, currentEmoteProperties.value);
-        }
-
-        emoteOwnershipMap.set(emoteToBuy, new Emote(emoteToBuy, biddingUser, bidAmount));
-
-        // update the ownership message
-        updateEmoteOwnershipMessage();
-
-        // charge bidder
-        addToBalanceForUserId(biddingUser, -bidAmount);
-        // refund old owner
-        if (previousOwner != null) {
-            msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + "!");
-            addToTransactionHistory(msg.member.displayName + " acquired " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + ".");
-        } else {
-            msg.channel.send(msg.member.displayName + " acquires " + emoteToBuy + " for ₿" + bidAmount + "!");
-            addToTransactionHistory(msg.member.displayName + " acquired " + emoteToBuy + " for ₿" + bidAmount + ".");
-        }
+        bid(biddingUser, emoteToBuy, bidAmount, msg);
+        return;
     }
 
     if (msg.mentions.members.size > 0) {
         if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
             msg.channel.sendTyping();
-            shoot(msg, 15 * 1000);
+            shootFromMessage(msg, 15 * 1000);
         } else if (msg.content.substring(1, 5).toLowerCase() === "kill") {
             msg.channel.sendTyping();
-            shoot(msg, 60 * 1000);
+            shootFromMessage(msg, 60 * 1000);
         }
 
         if (msg.content.startsWith("~tip")) {
             msg.channel.sendTyping();
-            const fromUser = msg.member.id;
-            var fromUserBalance = accountBalancesMap.get(fromUser);
+            const fromUser = msg.member;
 
-            const mentionedUserIds = Array.from( msg.mentions.members.keys() );
             var amountToSend = msg.content.split(" ");
             amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
 
@@ -516,133 +539,205 @@ client.on('messageCreate', async (msg) => {
                 return;
             }
 
-            for (let i = 0; i < mentionedUserIds.length; i++) {
-                const toUser = mentionedUserIds[i];
-                var toUserBalance = accountBalancesMap.get(toUser);
-                
-                if (amountToSend > fromUserBalance) {
-                    msg.reply("You only have ₿" + fromUserBalance + "! " + randomFaceEmote());
-                    return;
-                } else if (fromUser == toUser) {
-                    msg.channel.send("~shoot <@" + fromUser + ">");
-                    return;
-                }
-
-                fromUserBalance -= amountToSend;
-                toUserBalance += amountToSend;
-
-                updateBalanceForUserId(fromUser, fromUserBalance);
-                updateBalanceForUserId(toUser, toUserBalance);
-                msg.channel.send(msg.member.displayName + " sends " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend + ".\n" + msg.member.displayName + "'s balance: ₿" + fromUserBalance + "\n" + msg.mentions.members.get(toUser).displayName + "'s balance: ₿" + toUserBalance);
-                addToTransactionHistory(msg.member.displayName + " sent " + msg.mentions.members.get(toUser).displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
+            const mentionedUsers = Array.from( msg.mentions.members.values() );
+            for (let i = 0; i < mentionedUsers.length; i++) {
+                const toUser = mentionedUsers[i];
+                tip(fromUser, toUser, amountToSend, msg);
             }
             return;
         }
 
         if (msg.content.startsWith("~bonus")) {
-            if (msg.author.id != geneUserId && msg.author.id != benUserId) {
-                msg.channel.send("~shoot <@" + msg.author.id + ">");
-                return;
-            }
-            const mentionedUserIds = Array.from( msg.mentions.members.keys() );
             var amountToSend = msg.content.split(" ");
             amountToSend = parseInt(amountToSend[amountToSend.length - 1].match(/\d/g).join(""));
-    
-            if (isNaN(amountToSend)) {
-                msg.channel.send("Invalid amount! " + randomFaceEmote());
-                return;
-            }
-    
-            for (let i = 0; i < mentionedUserIds.length; i++) {
-                const toUser = mentionedUserIds[i];
-    
-                addToBalanceForUserId(toUser, amountToSend);
-                msg.channel.send("Added ₿" + amountToSend.toLocaleString("en-US") + " to " + msg.mentions.members.get(toUser).displayName + "'s balance.\nNew current balance: ₿" + accountBalancesMap.get(toUser).toLocaleString("en-US") + ".");
-            }
+            bonus(msg.author.id, Array.from(msg.mentions.members.values()), amountToSend, msg)
             return;
         }
     }
     
     if (msg.channel.id === scoreboardChannelId) {
-        var collection = await getMovieCollection(msg.channel);
         var separatorPos = msg.content.search(" "); // The first space after the bot command
         if (separatorPos < 0) {
             return;
-        } else if (collection.length <= 50) {
-            msg.channel.send("Error parsing the movie collection, canceling change.").then(errorMessage => {
-                setTimeout(() => errorMessage.delete(), 10000)
-            });
-            return;
         }
         const movieEntry = msg.content.substring(separatorPos + 1); // The sent message with the bot command excluded
-        var confirmationText = "";
 
         if (msg.content.toLowerCase().startsWith("~add")) {
             separatorPos = movieEntry.search(" ");
             if (separatorPos < 0) {
                 return;
             }
-            msg.channel.sendTyping();
 
             const newMovieNumber = movieEntry.substring(0, separatorPos).match(/\d/g).join("");
             const newMovieTitle = movieEntry.substring(separatorPos + 1);
 
-            collection.splice(newMovieNumber - 1, 0, newMovieNumber + ". " + newMovieTitle);
-            for (let i = newMovieNumber; i < collection.length; i++) {
-                separatorPos = collection[i].indexOf(".");
-                
-                collection[i] = (+i + +1) + collection[i].substring(separatorPos);
-            }
-
-            // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
-            var membersList = "";
-            if (msg.author.id == benUserId) {
-                membersList = await grantAllowance();
-            }
-            if (membersList != "") {
-                confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ".";
-            } else {
-                confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ".";
-            }
+            await addMovieToScoreboard(newMovieNumber, newMovieTitle, msg.author.id, msg);
+            msg.delete();
+            return;
 
         } else if (msg.content.toLowerCase().startsWith("~remove")) {
-            msg.channel.sendTyping();
-            const newMovieNumber = movieEntry.match(/\d/g).join("");
-            let oldMovieName = collection[newMovieNumber - 1];
-            collection.splice(newMovieNumber - 1, 1);
-            for (let i = newMovieNumber - 1; i < collection.length; i++) {
-                separatorPos = collection[i].indexOf(".");
-                
-                collection[i] = (+i + +1) + collection[i].substring(separatorPos);
-            }
-
-            confirmationText = "Removed rank #" + oldMovieName + ".";
+            const movieNumber = movieEntry.match(/\d/g).join("");
+            await removeMovieFromScoreboard(movieNumber, msg);
+            msg.delete();
+            return;
             
         } else if (msg.content.toLowerCase().startsWith("~update")) {
             separatorPos = movieEntry.search(" ");
             if (separatorPos < 0) {
                 return;
             }
-            msg.channel.sendTyping();
-
-            const newMovieNumber = movieEntry.substring(0, separatorPos).match(/\d/g).join("");
+            const movieNumber = movieEntry.substring(0, separatorPos).match(/\d/g).join("");
             const newMovieTitle = movieEntry.substring(separatorPos + 1);
-            const oldMovieTitle = collection[newMovieNumber - 1];
 
-            collection[newMovieNumber - 1] = newMovieNumber + ". " + newMovieTitle;
+            await updateMovieTitleOnScoreboard(movieNumber, newMovieTitle, msg);
+            msg.delete();
+            return;
 
-            confirmationText = "Updated rank #" + oldMovieTitle + " to " + newMovieTitle + ".";
         } else {
             return;
         }
-
-        updateScoreBoard(collection, msg.channel);
-        msg.delete();
-        msg.channel.send(confirmationText).then(confirmationMessage => {
-            setTimeout(() => confirmationMessage.delete(), 10000)
-        });
     }
 });
+
+async function addMovieToScoreboard(newMovieNumber, newMovieTitle, userId, msg) {
+    msg.channel.sendTyping();
+    var movieCollection = await getMovieCollection(msg.channel);
+    if (movieCollection.length <= 50) {
+        msg.reply("Error parsing the movie collection, canceling change.").then(errorMessage => {
+            setTimeout(() => errorMessage.delete(), 10000)
+        });
+        return;
+    }
+
+    movieCollection.splice(newMovieNumber - 1, 0, newMovieNumber + ". " + newMovieTitle);
+    for (let i = newMovieNumber; i < movieCollection.length; i++) {
+        let separatorPos = movieCollection[i].indexOf(".");
+        
+        movieCollection[i] = (+i + +1) + movieCollection[i].substring(separatorPos);
+    }
+
+    // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
+    var membersList = "";
+    if (userId == benUserId) {
+        membersList = await grantAllowance();
+    }
+    var confirmationText = "";
+    if (membersList != "") {
+        confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ".";
+    } else {
+        confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ".";
+    }
+
+    await applyUpdatesToScoreboard(movieCollection, confirmationText, msg);
+}
+
+async function removeMovieFromScoreboard(movieNumber, msg) {
+    msg.channel.sendTyping();
+    var movieCollection = await getMovieCollection(msg.channel);
+    if (movieCollection.length <= 50) {
+        msg.reply("Error parsing the movie collection, canceling change.").then(errorMessage => {
+            setTimeout(() => errorMessage.delete(), 10000)
+        });
+        return;
+    } else if (movieNumber > movieCollection.length || movieNumber < 0) {
+        msg.reply("Provided rank is not within the bounds of the scoreboard.").then(errorMessage => {
+            setTimeout(() => errorMessage.delete(), 10000)
+        });
+        return;
+    }
+
+    let removedMovieName = movieCollection[movieNumber - 1];
+    movieCollection.splice(movieNumber - 1, 1);
+    for (let i = movieNumber - 1; i < movieCollection.length; i++) {
+        let separatorPos = movieCollection[i].indexOf(".");
+        
+        movieCollection[i] = (+i + +1) + movieCollection[i].substring(separatorPos);
+    }
+
+    let confirmationText = "Removed rank #" + removedMovieName + ".";
+    await applyUpdatesToScoreboard(movieCollection, confirmationText, msg);
+}
+
+async function updateMovieTitleOnScoreboard(movieNumber, newMovieTitle, msg) {
+    msg.channel.sendTyping();
+    var movieCollection = await getMovieCollection(msg.channel);
+    if (movieCollection.length <= 50) {
+        msg.reply("Error parsing the movie collection, canceling change.").then(errorMessage => {
+            setTimeout(() => errorMessage.delete(), 10000)
+        });
+        return;
+    }
+
+    const oldMovieTitle = movieCollection[movieNumber - 1];
+
+    movieCollection[movieNumber - 1] = movieNumber + ". " + newMovieTitle;
+
+    let confirmationText = "Updated rank #" + oldMovieTitle + " to " + newMovieTitle + ".";
+    await applyUpdatesToScoreboard(movieCollection, confirmationText, msg);
+}
+
+async function updateMovieRankOnScoreboard(oldRank, newRank, newMovieTitle, msg) {
+    if (!newRank && !newMovieTitle) {
+        msg.reply("Please supply an updated title / rank.").then(errorMessage => {
+            setTimeout(() => errorMessage.delete(), 10000)
+        });
+        return;
+    }
+    msg.channel.sendTyping();
+    var movieCollection = await getMovieCollection(msg.channel);
+    if (movieCollection.length <= 50) {
+        msg.reply("Error parsing the movie collection, canceling change.").then(errorMessage => {
+            setTimeout(() => errorMessage.delete(), 10000)
+        });
+        return;
+    }
+
+    const oldMovieTitle = movieCollection[oldRank - 1].substring(movieCollection[oldRank - 1].indexOf(".") + 2);
+    if (!newMovieTitle) {
+        newMovieTitle = oldMovieTitle;
+    }
+
+    if (!newRank || oldRank === newRank) {
+        await updateMovieTitleOnScoreboard(oldRank, newMovieTitle, msg);
+        return;
+    } else if (newRank < oldRank) {
+        movieCollection.splice(oldRank - 1, 1);
+        movieCollection.splice(newRank - 1, 0, newRank + ". " + newMovieTitle);
+    } else {
+        movieCollection.splice(newRank - 1, 0, newRank + ". " + newMovieTitle);
+        movieCollection.splice(oldRank - 1, 1);
+    }
+    
+    for (let i = Math.min(oldRank, newRank) - 1; i < Math.max(oldRank, newRank) - 1; i++) {
+        let separatorPos = movieCollection[i].indexOf(".");
+        
+        movieCollection[i] = (+i + +1) + movieCollection[i].substring(separatorPos);
+    }
+
+    let confirmationText = "Updated rank #" + oldRank + ". " + oldMovieTitle + " to #" + newRank + ". " + newMovieTitle + ".";
+    await applyUpdatesToScoreboard(movieCollection, confirmationText, msg);
+}
+
+async function applyUpdatesToScoreboard(newMovieCollection, confirmationText, msg) {
+    let archiveChannel = await client.channels.fetch(scoreboardArchiveChannelId);
+
+    // Every 5 updates, dump the entire scoreboard into the archive
+    var scoreboardNeedsArchive = true
+    const messages = await archiveChannel.messages.fetch({ limit: 5 }); // Check last 5 messages
+    for( let message of messages ) {
+        let content = message[1].content
+        if (content.indexOf("Scoreboard updated: ") < 0) {
+            scoreboardNeedsArchive = false;
+            break;
+        }
+    }
+
+    await archiveChannel.send("Scoreboard updated: " + confirmationText);
+    await updateScoreBoard(newMovieCollection, msg.channel, scoreboardNeedsArchive, archiveChannel);
+    await msg.reply(confirmationText).then(confirmationMessage => {
+        setTimeout(() => confirmationMessage.delete(), 10000)
+    });
+}
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (newState.streaming && newState.channel != null && !oldState.streaming) {
@@ -721,19 +816,22 @@ async function giveEmoteOwnerRoyalties(emoteId, userId) {
     }
 }
 
-function shoot(msg, timeoutDuration) {
+function shootFromMessage(msg, timeoutDuration) {
+    shoot(msg.mentions.members, msg.member, msg, timeoutDuration)
+}
 
+function shoot(targets, shooter, msg, timeoutDuration) {
     var backfire = false;
     var shootMessage = randomFaceEmote();
     var tagMessage = "";
 
-    msg.mentions.members.forEach( mentionedMember => {
+    targets.forEach( mentionedMember => {
         if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId) {
-          if (msg.member.id == benUserId || msg.member.id == gunUserId) {
+          if (shooter.id == benUserId || shooter.id == gunUserId) {
                 return;
             } else {
-                msg.member.timeout(timeoutDuration * 2);
-                tagMessage = "<@" + msg.member.id + ">";
+                shooter.timeout(timeoutDuration * 2);
+                tagMessage = "<@" + shooter.id + ">";
                 backfire = true;
             }
         } else {
@@ -743,26 +841,26 @@ function shoot(msg, timeoutDuration) {
             tagMessage += "<@" + mentionedMember.id + ">";
             mentionedMember.timeout(timeoutDuration);
         }
-    });
-    for (let i = 0; i < msg.mentions.members.size; i++) {
         shootMessage = gunEmote + shootMessage;
-
         if (backfire || timeoutDuration > 20 * 1000) {
             shootMessage = shootMessage + gunEmote2;
         }
-    }
-    msg.channel.send(tagMessage);
+    });
+    msg.reply(tagMessage);
     msg.channel.send(shootMessage);
 }
 
-async function updateScoreBoard(movieCollection, channel) {
+async function updateScoreBoard(movieCollection, channel, needsArchive, archiveChannel) {
     var scoreboardMessageIndex = 0;
     var scoreboardMessageContent = "";
     var scoreboardMessageCharCount = 0;
 
     for (let i = 0; i < movieCollection.length; i++) {
         if (scoreboardMessageCharCount + movieCollection[i].length + 1 > 2000) {
-            await channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
+            await channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => {
+                if (needsArchive) { archiveChannel.send(message.content); }
+                message.edit(content=scoreboardMessageContent);
+            });
 
             scoreboardMessageIndex++;
             scoreboardMessageContent = "";
@@ -780,7 +878,10 @@ async function updateScoreBoard(movieCollection, channel) {
         scoreboardMessageCharCount += movieCollection[i].length;
     }
 
-    channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => message.edit(content=scoreboardMessageContent));
+    channel.messages.fetch(scoreboardMessageIds[scoreboardMessageIndex]).then( message => {
+        if (needsArchive) { archiveChannel.send(message.content); }
+        message.edit(content=scoreboardMessageContent);
+    });
 }
 
 function randomFaceEmote() {
@@ -790,4 +891,107 @@ function randomFaceEmote() {
     let max = Math.floor(faceEmotes.length);
     let index = Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
     return faceEmotes[index];
+}
+
+function tip(fromUser, toUser, amountToSend, msg) {
+    var fromUserBalance = accountBalancesMap.get(fromUser.id);
+    var toUserBalance = accountBalancesMap.get(toUser.id);
+                
+    if (amountToSend > fromUserBalance) {
+        msg.reply("You only have ₿" + fromUserBalance + "! " + randomFaceEmote());
+        return;
+    } else if (fromUser.id == toUser.id) {
+        msg.channel.send("~shoot <@" + fromUser.id + ">");
+        return;
+    }
+
+    fromUserBalance -= amountToSend;
+    toUserBalance += amountToSend;
+
+    updateBalanceForUserId(fromUser.id, fromUserBalance);
+    updateBalanceForUserId(toUser.id, toUserBalance);
+    msg.reply(fromUser.displayName + " sends <@" + toUser.id + "> ₿" + amountToSend + ".\n" + fromUser.displayName + "'s balance: ₿" + fromUserBalance + "\n" + toUser.displayName + "'s balance: ₿" + toUserBalance);
+    addToTransactionHistory(fromUser.displayName + " sent " + toUser.displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
+}
+
+function bonus(fromUserId, toUsers, amountToSend, msg) {
+    if (fromUserId != geneUserId && fromUserId != benUserId) {
+        msg.reply("~shoot <@" + fromUserId + ">");
+        return;
+    }
+
+    if (isNaN(amountToSend)) {
+        msg.reply("Invalid amount! " + randomFaceEmote());
+        return;
+    }
+
+    for (let i = 0; i < toUsers.length; i++) {
+        const toUser = toUsers[i];
+
+        addToBalanceForUserId(toUser.id, amountToSend);
+        msg.reply("Added ₿" + amountToSend.toLocaleString("en-US") + " to " + toUser.displayName + "'s balance.\nNew current balance: ₿" + accountBalancesMap.get(toUser.id).toLocaleString("en-US") + ".");
+    }
+}
+
+function bid(biddingUser, emoteToBuy, bidAmount, msg) {
+    if (emoteToBuy == "") {
+        return;
+    } else if (emoteToBuy == gunEmote || emoteToBuy == gunEmote2) {
+        if (biddingUser.id != benUserId) {
+            msg.reply("~shoot");
+        }
+        return;
+    }
+    var emoteId = emoteToBuy.substring(3);
+    emoteId = emoteId.substring(emoteId.search(":") + 1, emoteId.search(">"));
+
+    var serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
+    if (serverEmote == null || !serverEmote.available) {
+        if (biddingUser.id != benUserId) {
+            msg.reply("~shoot");
+        }
+        return;
+    }
+    msg.channel.sendTyping();
+    // verify user has enough ₿ to bid on emote
+    var biddingUserBalance = accountBalancesMap.get(biddingUser.id);
+
+    if (bidAmount > biddingUserBalance) {
+        msg.reply("Insufficient funds! " + randomFaceEmote());
+        return;
+    }
+
+    // find current ownership
+    var previousOwner;
+    if (emoteOwnershipMap.has(emoteToBuy)) {
+        const currentEmoteProperties = emoteOwnershipMap.get(emoteToBuy);
+
+        if (currentEmoteProperties.owner == biddingUser.id) {
+            return;
+        }
+        // Make sure new user can afford
+        if (currentEmoteProperties.value >= bidAmount) {
+            msg.reply("Bid amount must be higher than ₿" + currentEmoteProperties.value + "! " + randomFaceEmote());
+            return;
+        }
+
+        previousOwner = currentEmoteProperties.owner;
+        addToBalanceForUserId(previousOwner, currentEmoteProperties.value);
+    }
+
+    emoteOwnershipMap.set(emoteToBuy, new Emote(emoteToBuy, biddingUser.id, bidAmount));
+
+    // update the ownership message
+    updateEmoteOwnershipMessage();
+
+    // charge bidder
+    addToBalanceForUserId(biddingUser.id, -bidAmount);
+    // refund old owner
+    if (previousOwner != null) {
+        msg.reply(biddingUser.displayName + " acquires " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + "!");
+        addToTransactionHistory(biddingUser.displayName + " acquired " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + ".");
+    } else {
+        msg.reply(biddingUser.displayName + " acquires " + emoteToBuy + " for ₿" + bidAmount + "!");
+        addToTransactionHistory(biddingUser.displayName + " acquired " + emoteToBuy + " for ₿" + bidAmount + ".");
+    }
 }
