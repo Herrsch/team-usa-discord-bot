@@ -1,18 +1,18 @@
-# fly.toml app configuration file generated for team-usa-discord-bot on 2023-06-20T00:39:03-04:00
+# fly.toml app configuration file generated for team-usa-discord-bot on 2024-06-01T15:31:46-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "team-usa-discord-bot"
-primary_region = "ewr"
-kill_signal = "SIGINT"
-kill_timeout = "5s"
+app = 'team-usa-discord-bot'
+primary_region = 'ewr'
+kill_signal = 'SIGINT'
+kill_timeout = '5s'
 
 [experimental]
   auto_rollback = true
 
 [build]
-  builder = "heroku/buildpacks:20"
+  dockerfile = "Dockerfile"
 
 [env]
-  PORT = "8080"
+  PORT = '8080'
