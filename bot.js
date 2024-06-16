@@ -187,7 +187,7 @@ function addToBalanceForUserId(userId, amountToAdd) {
         return;
     }
 
-    let newBalance = accountBalancesMap.get(userId) + amountToAdd;
+    let newBalance = accountBalancesMap.get(userId) + Math.round(amountToAdd);
     accountBalancesMap.set(userId, newBalance);
 
     updateBalancePostForUserId(userId);
@@ -626,6 +626,7 @@ async function addMovieToScoreboard(newMovieNumber, newMovieTitle, userId, msg) 
         return;
     }
 
+    // Grant a bonus of ₿20 scaled based on how low the movie is being placed.
     let bonusAmount = Math.round(20 * ((newMovieNumber - 1) / movieCollection.length))
 
     movieCollection.splice(newMovieNumber - 1, 0, newMovieNumber + ". " + newMovieTitle);
@@ -915,13 +916,29 @@ function randomFaceEmote() {
 function tip(fromUser, toUser, amountToSend, msg) {
     var fromUserBalance = accountBalancesMap.get(fromUser.id);
     var toUserBalance = accountBalancesMap.get(toUser.id);
-                
+    
+    amountToSend = Math.round(amountToSend);
+
     if (amountToSend > fromUserBalance) {
         msg.reply("You only have ₿" + fromUserBalance + "! " + randomFaceEmote());
         return;
     } else if (fromUser.id == toUser.id) {
-        msg.channel.send("~shoot <@" + fromUser.id + ">");
+        msg.reply("~shoot <@" + fromUser.id + ">");
         return;
+    } else if (amountToSend == 0) {
+        msg.reply("You gotta tip more than ₿0 " + randomFaceEmote());
+        return;
+    }
+
+    var yoinkText = "";
+    // If yoinking, 50/50 chance to actually tip double
+    if (amountToSend < 0) {
+        if (Math.floor(Math.random() * 2) >= 1) {
+            amountToSend = Math.min(fromUserBalance, Math.abs(amountToSend * 2));
+            yoinkText = "# REVERSE YOINK\n";
+        } else {
+            yoinkText = "# YOINK\n";
+        }
     }
 
     fromUserBalance -= amountToSend;
