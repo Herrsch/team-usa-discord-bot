@@ -619,12 +619,14 @@ client.on('messageCreate', async (msg) => {
 async function addMovieToScoreboard(newMovieNumber, newMovieTitle, userId, msg) {
     msg.channel.sendTyping();
     var movieCollection = await getMovieCollection(msg.channel);
-    if (movieCollection.length <= 50) {
+    if (movieCollection.length <= 50 || newMovieNumber > movieCollection.length + 1) {
         msg.reply("Error parsing the movie collection, canceling change.").then(errorMessage => {
             setTimeout(() => errorMessage.delete(), 10000)
         });
         return;
     }
+
+    let bonusAmount = Math.round(20 * ((newMovieNumber - 1) / movieCollection.length))
 
     movieCollection.splice(newMovieNumber - 1, 0, newMovieNumber + ". " + newMovieTitle);
     for (let i = newMovieNumber; i < movieCollection.length; i++) {
@@ -636,11 +638,11 @@ async function addMovieToScoreboard(newMovieNumber, newMovieTitle, userId, msg) 
     // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
     var membersList = "";
     if (userId == benUserId) {
-        membersList = await grantAllowance();
+        membersList = await grantAllowance(bonusAmount);
     }
     var confirmationText = "";
     if (membersList != "") {
-        confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ".";
+        confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ", with a ₿" + bonusAmount + " bonus.";
     } else {
         confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ".";
     }
@@ -792,7 +794,7 @@ client.on(Events.GuildEmojiDelete, async (emoji) => {
     }
 });
 
-async function grantAllowance() {
+async function grantAllowance(bonusAmount) {
     let voiceChannel = await client.channels.fetch(voiceChannelId);
     let membersArray = Array.from(voiceChannel.members.values());
     var membersList = "";
@@ -805,10 +807,10 @@ async function grantAllowance() {
             }
         }
         membersList += membersArray[i].displayName;
-        addToBalanceForUserId(membersArray[i].id, 10);
+        addToBalanceForUserId(membersArray[i].id, 10 + bonusAmount);
     }
     if (membersArray.length > 0) {
-        addToTransactionHistory(membersList + " got their ₿10 allowance.");
+        addToTransactionHistory(membersList + " got their ₿10 allowance, plus a ₿" + bonusAmount + " bonus.");
     }
     return membersList;
 }
