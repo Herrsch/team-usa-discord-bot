@@ -946,7 +946,7 @@ function tip(fromUser, toUser, amountToSend, msg) {
 
     updateBalanceForUserId(fromUser.id, fromUserBalance);
     updateBalanceForUserId(toUser.id, toUserBalance);
-    msg.reply(fromUser.displayName + " sends <@" + toUser.id + "> ₿" + amountToSend + ".\n" + fromUser.displayName + "'s balance: ₿" + fromUserBalance + "\n" + toUser.displayName + "'s balance: ₿" + toUserBalance);
+    msg.reply(yoinkText + fromUser.displayName + " sends <@" + toUser.id + "> ₿" + amountToSend + ".\n" + fromUser.displayName + "'s balance: ₿" + fromUserBalance + "\n" + toUser.displayName + "'s balance: ₿" + toUserBalance);
     addToTransactionHistory(fromUser.displayName + " sent " + toUser.displayName + " ₿" + amountToSend.toLocaleString("en-US") + ".");
 }
 
