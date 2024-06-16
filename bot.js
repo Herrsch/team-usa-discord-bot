@@ -937,6 +937,7 @@ function tip(fromUser, toUser, amountToSend, msg) {
             amountToSend = Math.min(fromUserBalance, Math.abs(amountToSend * 2));
             yoinkText = "# REVERSE YOINK\n";
         } else {
+            amountToSend = Math.max(amountToSend, -toUserBalance);
             yoinkText = "# YOINK\n";
         }
     }
