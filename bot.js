@@ -928,6 +928,9 @@ function tip(fromUser, toUser, amountToSend, msg) {
     } else if (amountToSend == 0) {
         msg.reply("You gotta tip more than ₿0 " + randomFaceEmote());
         return;
+    } else if (fromUserBalance == 0) {
+        msg.reply("You can't tip with no Boffos! " + randomFaceEmote() + "\nCurrent balance: ₿" + fromUserBalance);
+        return;
     }
 
     var yoinkText = "";
@@ -937,7 +940,7 @@ function tip(fromUser, toUser, amountToSend, msg) {
             amountToSend = Math.min(fromUserBalance, Math.abs(amountToSend * 2));
             yoinkText = "# REVERSE YOINK\n";
         } else {
-            amountToSend = Math.max(amountToSend, -toUserBalance);
+            amountToSend = Math.max(amountToSend, -toUserBalance, -fromUserBalance);
             yoinkText = "# YOINK\n";
         }
     }
