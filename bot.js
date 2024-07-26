@@ -16,7 +16,8 @@ const nonFaceEmotes = [
 
 const gunUserId = "938529523811627038";
 const benUserId = "410621256140980225";
-const geneUserId = "282597947064057856";
+const lenaUserId = "282597947064057856";
+const joeUserId = "206968933725503488";
 const generalChannelId = "702142443608473602";
 const suggestionsChannelId = "704484111967846452";
 const scoreboardChannelId = "712134924815040522";
@@ -26,6 +27,8 @@ const voiceChannelId = "702142443608473603";
 const emoteOwnershipMessageId = "1072279118944673872";
 const transactionHistoryMessageId = "1072279127291334767";
 const serverId = "702142442949967953";
+
+const joeAttendanceCost = 25;
 
 const scoreboardMessageIds = [
     "1047313677956681820",
@@ -41,7 +44,7 @@ const boffoBalanceIDsMap = new Map([ // User ID, balance post ID
     ["424031474661064715", "1072279173168631839"], // Adam
     ["206975381067137025", "1072279186032558110"], // Dylan F
     ["701085890117632075", "1072279198665814056"], // Garrett
-    ["282597947064057856", "1072279211437465640"], // Gene
+    ["282597947064057856", "1072279211437465640"], // Lena
     ["281984105523183616", "1072279223840022568"], // Nathaniel
     ["746882782596431872", "1072279236355833917"], // Maren
     ["206968933725503488", "1072279248938746017"], // Joe
@@ -80,12 +83,12 @@ async function initializeStore() { // Used for initializing or editing any templ
 
     const addToWheelButton = new ButtonBuilder()
                             .setCustomId("addToWheelButton")
-                            .setLabel("(₿100) Add any movie to the wheel immediately")
+                            .setLabel("(₿100) Add to the wheel immediately")
                             .setStyle(ButtonStyle.Primary);
 
     const yourChoiceNextButton = new ButtonBuilder()
                                 .setCustomId("yourChoiceNextButton")
-                                .setLabel("(₿200) You choose the movie for next movie night")
+                                .setLabel("(₿200) Choose the next movie")
                                 .setStyle(ButtonStyle.Success);
 
     const vetoButton = new ButtonBuilder()
@@ -93,8 +96,14 @@ async function initializeStore() { // Used for initializing or editing any templ
                            .setLabel("(₿300) Veto this week's movie")
                            .setStyle(ButtonStyle.Danger);
 
-    const row = new ActionRowBuilder().addComponents(addToWheelButton, yourChoiceNextButton, vetoButton);
-    
+
+    const joeAttendsButton = new ButtonBuilder()
+                        .setCustomId("joeAttendsButton")
+                        .setLabel("(₿" + joeAttendanceCost + ") Joe mandatory attendance")
+                        .setStyle(ButtonStyle.Primary);
+
+    const row = new ActionRowBuilder().addComponents(addToWheelButton, yourChoiceNextButton, vetoButton, joeAttendsButton);
+
     ledgerChannel.send({content: "**~The ₿offo Boutique~**", components:[row]});
 }
 
@@ -401,6 +410,56 @@ client.on(Events.InteractionCreate, async (interaction) => {
             } catch (e) {
                 await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling.', components: [] }).then(setTimeout(() => interaction.deleteReply(), 10000));
             }
+        } else if (interaction.component.customId === "joeAttendsButton") {
+            if (accountBalancesMap.get(userId) < joeAttendanceCost) {
+                sendToGeneralChannel(userDisplayName + " can't afford to be friends with <@" + joeUserId + ">");
+                return;
+            }
+
+            var joeUser = interaction.guild.members.cache.get(joeUserId);
+            if (joeUser == null) { // If Joe is not in the cache
+                var serverMembers = await interaction.guild.members.fetch();
+                joeUser = serverMembers.get(joeUserId)
+            }
+            const joeDisplayName = joeUser.displayName
+
+            const joeConfirmButton = new ButtonBuilder()
+            .setCustomId("joeConfirmButton")
+            .setLabel("Yes")
+            .setStyle(ButtonStyle.Success);
+
+            const joeCancelButton = new ButtonBuilder()
+            .setCustomId("joeCancelButton")
+            .setLabel("No, I don't like " + joeDisplayName)
+            .setStyle(ButtonStyle.Secondary);
+
+            const row = new ActionRowBuilder().addComponents(joeConfirmButton, joeCancelButton);
+
+            const response = await interaction.reply({
+                content: "<@" + userId + "> do you want to pay ₿" + joeAttendanceCost + " to hang out with " + joeDisplayName + "?",
+                components: [row],
+                ephemeral:true,
+                fetchReply: true
+            });
+
+            try {
+                const confirmation = await response.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
+
+                if (confirmation.customId === 'joeConfirmButton' && accountBalancesMap.get(userId) >= joeAttendanceCost) {
+                    addToBalanceForUserId(userId, -joeAttendanceCost);
+                    addToBalanceForUserId(joeUserId, 5)
+                    await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+
+                    addToTransactionHistory("<@"+userId+"> paid ₿" + joeAttendanceCost + " to hang out with <@" + joeUserId + ">. " + joeDisplayName + " receives ₿5.");
+
+                    await sendToGeneralChannel("<@"+userId+"> has paid ₿" + joeAttendanceCost + " to hang out with <@" + joeUserId + ">! " + joeDisplayName + "'s attendance is mandatory next movie night.");
+                    
+                } else if (confirmation.customId === 'joeCancelButton') {
+                    await confirmation.update({ content: joeDisplayName+" hangout cancelled.", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
+                }
+            } catch (e) {
+                await interaction.editReply({ content: 'Confirmation not received within 1 minute, cancelling.', components: [] }).then(setTimeout(() => interaction.deleteReply(), 10000));
+            }
         }
     } else if (interaction.isModalSubmit()) {
         const userId = interaction.member.id;
@@ -511,7 +570,7 @@ client.on('messageCreate', async (msg) => {
     }
 
     if (msg.content.startsWith("~delete")) {
-        if (msg.author.id != geneUserId && msg.author.id != benUserId) {
+        if (msg.author.id != lenaUserId && msg.author.id != benUserId) {
             return;
         }
         if (msg.reference) {
@@ -955,7 +1014,7 @@ function tip(fromUser, toUser, amountToSend, msg) {
 }
 
 function bonus(fromUserId, toUsers, amountToSend, msg) {
-    if (fromUserId != geneUserId && fromUserId != benUserId) {
+    if (fromUserId != lenaUserId && fromUserId != benUserId) {
         msg.reply("~shoot <@" + fromUserId + ">");
         return;
     }
