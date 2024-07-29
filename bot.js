@@ -28,7 +28,7 @@ const emoteOwnershipMessageId = "1072279118944673872";
 const transactionHistoryMessageId = "1072279127291334767";
 const serverId = "702142442949967953";
 
-const joeAttendanceCost = 25;
+const joeAttendanceCost = 50;
 
 const scoreboardMessageIds = [
     "1047313677956681820",
@@ -447,7 +447,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
                 if (confirmation.customId === 'joeConfirmButton' && accountBalancesMap.get(userId) >= joeAttendanceCost) {
                     addToBalanceForUserId(userId, -joeAttendanceCost);
-                    addToBalanceForUserId(joeUserId, 5)
+                    addToBalanceForUserId(joeUserId, joeAttendanceCost)
                     await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
                     addToTransactionHistory("<@"+userId+"> paid ₿" + joeAttendanceCost + " to hang out with <@" + joeUserId + ">. " + joeDisplayName + " receives ₿5.");
