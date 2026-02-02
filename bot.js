@@ -128,7 +128,7 @@ client.on('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
-// Copy/Paste point
+// MARK: Copy/Paste point
 
 async function initializeAccountBalances() {
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
@@ -937,14 +937,17 @@ function shoot(targets, shooter, msg, timeoutDuration, cost) {
         }
     });
     if (tagMessage != '') { // Cancel out if there are no tags
-        msg.reply(tagMessage);
-        msg.channel.send(shootMessage);
         if (backfire == true) {
+            msg.reply("Gun backfired!");
             addToTransactionHistory("<@" + shooter.id + ">'s gun backfired!");
         } else {
             addToBalanceForUserId(shooter.id, -cost);
-            addToTransactionHistory("<@" + shooter.id + "> paid ₿" + cost + " to shoot " + tagMessage + ".");
+            let transactionText = shooter.displayName + " paid ₿" + cost + " to shoot " + tagMessage + ".";
+            msg.reply(transactionText + " " + shooter.displayName + "'s new balance: ₿" + accountBalancesMap.get(shooter.id) + ".");
+            addToTransactionHistory(transactionText);
         }
+        msg.channel.send(tagMessage);
+        msg.channel.send(shootMessage);
     }
 }
 
