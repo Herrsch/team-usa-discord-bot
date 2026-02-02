@@ -693,7 +693,7 @@ async function addMovieToScoreboard(newMovieNumber, newMovieTitle, userId, msg) 
     }
 
     // Grant a bonus of ₿20 scaled based on how low the movie is being placed.
-    let bonusAmount = Math.round(20 * ((newMovieNumber - 1) / movieCollection.length))
+    //let bonusAmount = Math.round(20 * ((newMovieNumber - 1) / movieCollection.length))
 
     movieCollection.splice(newMovieNumber - 1, 0, newMovieNumber + ". " + newMovieTitle);
     for (let i = newMovieNumber; i < movieCollection.length; i++) {
@@ -705,11 +705,11 @@ async function addMovieToScoreboard(newMovieNumber, newMovieTitle, userId, msg) 
     // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
     var membersList = "";
     if (userId == benUserId) {
-        membersList = await grantAllowance(bonusAmount);
+        membersList = await grantAllowance();
     }
     var confirmationText = "";
     if (membersList != "") {
-        confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ", with a ₿" + bonusAmount + " bonus.";
+        confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ", and allowance granted to " + membersList + ".";
     } else {
         confirmationText = "Added " + newMovieTitle + " at rank " + newMovieNumber + ".";
     }
@@ -863,7 +863,7 @@ client.on(Events.GuildEmojiDelete, async (emoji) => {
     }
 });
 
-async function grantAllowance(bonusAmount) {
+async function grantAllowance() {
     let voiceChannel = await client.channels.fetch(voiceChannelId);
     let membersArray = Array.from(voiceChannel.members.values());
     var membersList = "";
@@ -876,10 +876,10 @@ async function grantAllowance(bonusAmount) {
             }
         }
         membersList += membersArray[i].displayName;
-        addToBalanceForUserId(membersArray[i].id, 10 + bonusAmount);
+        addToBalanceForUserId(membersArray[i].id, 10);
     }
     if (membersArray.length > 0) {
-        addToTransactionHistory(membersList + " got their ₿10 allowance, plus a ₿" + bonusAmount + " bonus.");
+        addToTransactionHistory(membersList + " got their ₿10 allowance.");
     }
     return membersList;
 }
