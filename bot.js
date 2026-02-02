@@ -19,7 +19,6 @@ const benUserId = "410621256140980225";
 const lenaUserId = "282597947064057856";
 const joeUserId = "206968933725503488";
 const generalChannelId = "702142443608473602";
-const suggestionsChannelId = "704484111967846452";
 const scoreboardChannelId = "712134924815040522";
 const scoreboardArchiveChannelId = "1246524630034808893";
 const ledgerChannelId = "1072168363129835560";
@@ -470,14 +469,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const movieTitle = interaction.fields.getTextInputValue("addToWheelMovieTitleTextInput");
 
             addToBalanceForUserId(userId, -100);
-            client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel!"));
+            sendToGeneralChannel("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel!");
             addToTransactionHistory("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel.");
             interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         } else if (interaction.customId == "chooseNextMovieModal") {
             const movieTitle = interaction.fields.getTextInputValue("chooseNextMovieTextInput");
 
             addToBalanceForUserId(userId, -200);
-            client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night!"));
+            sendToGeneralChannel("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night!");
             addToTransactionHistory("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
             interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         }
