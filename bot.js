@@ -814,9 +814,10 @@ async function applyUpdatesToScoreboard(newMovieCollection, confirmationText, ms
 
     await archiveChannel.send("Scoreboard updated: " + confirmationText);
     await updateScoreBoard(newMovieCollection, msg.channel, scoreboardNeedsArchive, archiveChannel);
-    await msg.reply(confirmationText).then(confirmationMessage => {
+    await msg.reply({content: confirmationText, flags: MessageFlags.Ephemeral}).then(confirmationMessage => {
         setTimeout(() => confirmationMessage.delete(), 10000)
     });
+    await sendToGeneralChannel("Scoreboard updated: " + confirmationText);
 }
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
