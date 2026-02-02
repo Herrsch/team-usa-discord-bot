@@ -826,15 +826,16 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         const generalChannel = await client.channels.fetch(generalChannelId);
         const messages = await generalChannel.messages.fetch({ limit: 15 }); // Check last 15 messages
 
+        const goneLiveMessageText = newState.member.displayName + " has gone live!";
         for( let message of messages ) {
             if (currentTimestamp - message[1].createdTimestamp > 4 * 60 * 60 * 1000) { // Check last four hours
                 break;
             }
-            if (message[1].author.id === gunUserId && message[1].content.startsWith(newState.member.displayName)) {
+            if (message[1].author.id === gunUserId && message[1].content.startsWith(goneLiveMessageText)) {
                 return;
             }
         }
-        generalChannel.send(newState.member.displayName + " has gone live!");
+        generalChannel.send(goneLiveMessageText);
     }
 });
 
