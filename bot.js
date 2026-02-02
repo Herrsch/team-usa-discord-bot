@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildEmojisAndStickers] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildExpressions] });
 require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
 
@@ -120,7 +120,7 @@ async function initializeNewAccount() {
     await ledgerChannel.send("~~                                          ~~");
 }
 
-client.on('ready', () => {
+client.on('clientReady', () => {
     // initializeStore();
     initializeAccountBalances();
     initializeEmoteOwnership();
@@ -378,12 +378,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const response = await interaction.reply({
                 content: "<@" + userId + "> are you sure you want to veto this week's movie?",
                 components: [row],
-                ephemeral:true,
-                fetchReply: true
+                flags: MessageFlags.Ephemeral,
+                withResponse: true
             });
 
             try {
-                const confirmation = await response.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
+                const confirmation = await response.resource.message.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
 
                 if ((confirmation.customId === 'vetoConfirmButton' || confirmation.customId === 'vetoConfirmWithShootButton') && accountBalancesMap.get(userId) >= 300) {
                     addToBalanceForUserId(userId, -300);
@@ -438,12 +438,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const response = await interaction.reply({
                 content: "<@" + userId + "> do you want to pay ₿" + joeAttendanceCost + " to hang out with " + joeDisplayName + "?",
                 components: [row],
-                ephemeral:true,
-                fetchReply: true
+                flags: MessageFlags.Ephemeral,
+                withResponse: true
             });
 
             try {
-                const confirmation = await response.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
+                const confirmation = await response.resource.message.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 });
 
                 if (confirmation.customId === 'joeConfirmButton' && accountBalancesMap.get(userId) >= joeAttendanceCost) {
                     addToBalanceForUserId(userId, -joeAttendanceCost);
@@ -470,14 +470,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
             addToBalanceForUserId(userId, -100);
             client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel!"));
             addToTransactionHistory("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel.");
-            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         } else if (interaction.customId == "chooseNextMovieModal") {
             const movieTitle = interaction.fields.getTextInputValue("chooseNextMovieTextInput");
 
             addToBalanceForUserId(userId, -200);
             client.channels.fetch(suggestionsChannelId).then(channel => channel.send("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night!"));
             addToTransactionHistory("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
-            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", ephemeral:true}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + parseInt(Date.now() / 1000 + 10) + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         }
     } else if (interaction.isChatInputCommand()) {
         const command = interaction.client.commands.get(interaction.commandName);
@@ -530,7 +530,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         //
         } else if (interaction.commandName == "add") {
             if (interaction.channelId != scoreboardChannelId) {
-                interaction.reply({content:"This command can only be used in the scoreboard channel.", ephemeral:true})
+                interaction.reply({content:"This command can only be used in the scoreboard channel.", flags: MessageFlags.Ephemeral})
                 return;
             } 
             let fromUserId = interaction.member.id;
@@ -541,7 +541,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         } else if (interaction.commandName == "remove") {
             if (interaction.channelId != scoreboardChannelId) {
-                interaction.reply({content:"This command can only be used in the scoreboard channel.", ephemeral:true})
+                interaction.reply({content:"This command can only be used in the scoreboard channel.", flags: MessageFlags.Ephemeral})
                 return;
             } 
             let rank = interaction.options.getInteger("rank");
@@ -550,7 +550,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         } else if (interaction.commandName == "update") {
             if (interaction.channelId != scoreboardChannelId) {
-                interaction.reply({content:"This command can only be used in the scoreboard channel.", ephemeral:true})
+                interaction.reply({content:"This command can only be used in the scoreboard channel.", flags: MessageFlags.Ephemeral})
                 return;
             } 
             let currentRank = interaction.options.getInteger("currentrank");
