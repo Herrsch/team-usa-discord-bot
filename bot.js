@@ -74,6 +74,7 @@ function Emote(id, owner, value) {
 
 var emoteOwnershipMap = new Map();
 var accountBalancesMap = new Map();
+var recentTransactionsArray = new Array();
 
 client.login(process.env.token);
 
@@ -123,6 +124,7 @@ client.on('clientReady', () => {
     // initializeStore();
     initializeAccountBalances();
     initializeEmoteOwnership();
+    initializeTransactionHistory();
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
@@ -168,6 +170,13 @@ async function initializeEmoteOwnership() {
             emoteOwnershipMap.set(emotes[j], new Emote(emotes[j], emoteOwnerId, emotePrice));
         }
     }
+}
+
+async function initializeTransactionHistory() {
+    const ledgerChannel = await client.channels.fetch(ledgerChannelId);
+    const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
+
+    recentTransactionsArray = transactionHistoryMessage.content.split("\n\n");
 }
 
 async function getMovieCollection(channel) {
@@ -236,25 +245,22 @@ async function addToTransactionHistory(transactionToAdd) {
     // Add timestamp to the new transaction
     transactionToAdd = "<t:" + parseInt(Date.now() / 1000) + ":f> " + transactionToAdd;
 
-    var transactions = transactionHistoryMessage.content.split("\n\n");
-    transactions.pop();
-    transactions.splice(1, 0, transactionToAdd);
+    recentTransactionsArray.pop();
+    recentTransactionsArray.splice(1, 0, transactionToAdd);
 
-    transactionHistoryMessage.edit(transactions.join("\n\n"));
+    transactionHistoryMessage.edit(recentTransactionsArray.join("\n\n"));
 }
 
 async function trackInterestInTransactionHistory(userId, emote) {
     const ledgerChannel = await client.channels.fetch(ledgerChannelId);
     const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
 
-    var transactions = transactionHistoryMessage.content.split("\n\n");
-
-    for (let i = 1; i < transactions.length; i++) {
-        if (transactions[i].search(userId + "> gained") < 0) { // Search for a message about this user gaining interest
+    for (let i = 1; i < recentTransactionsArray.length; i++) {
+        if (recentTransactionsArray[i].search(userId + "> gained") < 0) { // Search for a message about this user gaining interest
             continue;
         }
 
-        let thisTransactionText = transactions[i];
+        let thisTransactionText = recentTransactionsArray[i];
 
         // Update timestamp
         thisTransactionText = "<t:" + parseInt(Date.now() / 1000) + thisTransactionText.substring(thisTransactionText.search(":f>"));
@@ -270,11 +276,11 @@ async function trackInterestInTransactionHistory(userId, emote) {
         thisTransactionText = thisTransactionText.substring(0, boffoPosition + 1) + interestAmount + ".";
 
         for (let j = i; j > 1; j--) {
-            transactions[j] = transactions[j - 1];
+            recentTransactionsArray[j] = recentTransactionsArray[j - 1];
         }
-        transactions[1] = thisTransactionText;
+        recentTransactionsArray[1] = thisTransactionText;
 
-        transactionHistoryMessage.edit(transactions.join("\n\n"));
+        transactionHistoryMessage.edit(recentTransactionsArray.join("\n\n"));
         return;
     }
 
