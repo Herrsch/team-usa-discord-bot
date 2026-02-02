@@ -3,7 +3,7 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('kill')
-		.setDescription('Give user a long timeout. To kill multiple users or kill via message reply, use ~kill.')
+		.setDescription('Give user a long timeout. Costs ₿100. To kill via message reply, use ~kill.')
         .addUserOption(option =>
             option.setName('target')
                 .setDescription('The user you\'re silencing.')

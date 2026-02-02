@@ -3,7 +3,7 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('shoot')
-		.setDescription('Give user a short timeout. To shoot multiple users or shoot via message reply, use ~shoot.')
+		.setDescription('Give user a short timeout. Costs ₿50. To shoot via message reply, use ~shoot.')
         .addUserOption(option =>
             option.setName('target')
                 .setDescription('The user you\'re silencing.')
