@@ -363,17 +363,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
             .setLabel("Yes")
             .setStyle(ButtonStyle.Danger);
 
+            /* // This works but I don't actually like it in practice
             const vetoConfirmWithShootButton = new ButtonBuilder()
             .setCustomId("vetoConfirmWithShootButton")
             .setLabel("Yes, and shoot @everyone")
             .setStyle(ButtonStyle.Danger);
+            */
 
             const vetoCancelButton = new ButtonBuilder()
             .setCustomId("vetoCancelButton")
             .setLabel("No")
             .setStyle(ButtonStyle.Secondary);
 
-            const row = new ActionRowBuilder().addComponents(vetoConfirmButton, vetoConfirmWithShootButton, vetoCancelButton);
+            const row = new ActionRowBuilder().addComponents(vetoConfirmButton, vetoCancelButton);
 
             const response = await interaction.reply({
                 content: "<@" + userId + "> are you sure you want to veto this week's movie?",
