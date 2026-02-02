@@ -524,12 +524,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         //
         } else if (interaction.commandName == "shoot") {
             let target = [interaction.guild.members.cache.get(interaction.options.getUser("target").id)]
-            shoot(target, interaction.member, interaction, 15 * 1000)
+            shoot(target, interaction.member, interaction, 15 * 1000, 50)
             return;
 
         } else if (interaction.commandName == "kill") {
             let target = [interaction.guild.members.cache.get(interaction.options.getUser("target").id)]
-            shoot(target, interaction.member, interaction, 60 * 1000)
+            shoot(target, interaction.member, interaction, 60 * 1000, 100)
             return;
 
         //
@@ -604,10 +604,10 @@ client.on('messageCreate', async (msg) => {
     if (msg.mentions.members.size > 0) {
         if (msg.content.substring(1, 6).toLowerCase() === "shoot") {
             msg.channel.sendTyping();
-            shootFromMessage(msg, 15 * 1000);
+            shootFromMessage(msg, 15 * 1000, 50);
         } else if (msg.content.substring(1, 5).toLowerCase() === "kill") {
             msg.channel.sendTyping();
-            shootFromMessage(msg, 60 * 1000);
+            shootFromMessage(msg, 60 * 1000, 100);
         }
 
         if (msg.content.startsWith("~tip")) {
@@ -904,17 +904,19 @@ async function giveEmoteOwnerRoyalties(emoteId, userId) {
     }
 }
 
-function shootFromMessage(msg, timeoutDuration) {
-    shoot(msg.mentions.members, msg.member, msg, timeoutDuration)
+function shootFromMessage(msg, timeoutDuration, cost) {
+    shoot(msg.mentions.members, msg.member, msg, timeoutDuration, cost)
 }
 
-function shoot(targets, shooter, msg, timeoutDuration) {
+function shoot(targets, shooter, msg, timeoutDuration, cost) {
     var backfire = false;
     var shootMessage = randomFaceEmote();
     var tagMessage = "";
 
+    var shooterBalance = accountBalancesMap.get(shooter.id);
+
     targets.forEach( mentionedMember => {
-        if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId) {
+        if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId || shooterBalance < cost) {
           if (shooter.id == benUserId || shooter.id == gunUserId) {
                 return;
             } else {
@@ -934,8 +936,16 @@ function shoot(targets, shooter, msg, timeoutDuration) {
             shootMessage = shootMessage + gunEmote2;
         }
     });
-    msg.reply(tagMessage);
-    msg.channel.send(shootMessage);
+    if (tagMessage != '') { // Cancel out if there are no tags
+        msg.reply(tagMessage);
+        msg.channel.send(shootMessage);
+        if (backfire == true) {
+            addToTransactionHistory("<@" + shooter.id + ">'s gun backfired!");
+        } else {
+            addToBalanceForUserId(shooter.id, -cost);
+            addToTransactionHistory("<@" + shooter.id + "> paid ₿" + cost + " to shoot " + tagMessage + ".");
+        }
+    }
 }
 
 async function updateScoreBoard(movieCollection, channel, needsArchive, archiveChannel) {
