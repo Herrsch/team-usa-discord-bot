@@ -5,11 +5,11 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 require('dotenv').config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
 
-const gunEmote = "<:kaboom:938830966800150539>";
-const gunEmote2 = "<:kaboom2:938856552532676678>";
+const gunEmote = "<:kaboom:1467997874473144539>";
+const gunEmote2 = "<:kaboom2:1467997917435531397>";
 const nonFaceEmotes = [
-    "938830966800150539", // gunEmote (kaboom)
-    "938856552532676678", // gunEmote (kaboom2)
+    "1467997874473144539", // gunEmote (kaboom)
+    "1467997917435531397", // gunEmote (kaboom2)
     "790367046868140053", // dunkaccino
     "872580606339469404" // escape (leave server)
 ];
