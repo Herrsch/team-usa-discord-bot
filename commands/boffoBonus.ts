@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, PermissionsBitField, PermissionFlagsBits } = require('discord.js');
+import { SlashCommandBuilder, PermissionsBitField, PermissionFlagsBits, CommandInteraction } from 'discord.js';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('bonus')
 		.setDescription('Grant a Boffo bonus to a user.')
@@ -14,7 +14,7 @@ module.exports = {
                 .setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
     // This is not actually called, the command is handled in bot.js' client.on(Events.InteractionCreate...)
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
         interaction.reply({
             content: "Pong!",
             ephemeral:true,

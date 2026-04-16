@@ -2,15 +2,16 @@
   "name": "discord-gun-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "bot.ts",
   "scripts": {
-    "start": "node bot.js"
+    "start": "node bot.ts"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.25.1",
-    "dotenv": "^16.0.3"
+    "discord.js": "^14.26.3",
+    "dotenv": "^17.4.2"
   }
 }

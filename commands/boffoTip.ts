@@ -1,6 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder, CommandInteraction } from 'discord.js';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('tip')
 		.setDescription('Send Boffos to another user.')
@@ -13,7 +13,7 @@ module.exports = {
                 .setDescription('Number of Boffos you\'d like to send')
                 .setRequired(true)),
     // This is not actually called, the command is handled in bot.js' client.on(Events.InteractionCreate...)
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
         interaction.reply({
             content: "Pong!",
             ephemeral:true,

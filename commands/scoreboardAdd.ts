@@ -1,6 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder, CommandInteraction } from 'discord.js';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
 		.setName('add')
 		.setDescription('Add a movie to the scoreboard. Grant allowance to all users in voice channel when Ben uses this.')
@@ -13,7 +13,7 @@ module.exports = {
                 .setDescription('The movie\'s rank on the scoreboard.')
                 .setRequired(true)),
     // This is not actually called, the command is handled in bot.js' client.on(Events.InteractionCreate...)
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
         interaction.reply({
             content: "Pong!",
             ephemeral:true,

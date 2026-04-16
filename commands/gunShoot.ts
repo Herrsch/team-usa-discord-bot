@@ -1,15 +1,15 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder, CommandInteraction } from 'discord.js';
 
-module.exports = {
+export default {
 	data: new SlashCommandBuilder()
-		.setName('kill')
-		.setDescription('Give user a long timeout. Costs ₿100. To kill via message reply, use ~kill.')
+		.setName('shoot')
+		.setDescription('Give user a short timeout. Costs ₿50. To shoot via message reply, use ~shoot.')
         .addUserOption(option =>
             option.setName('target')
                 .setDescription('The user you\'re silencing.')
                 .setRequired(true)),
     // This is not actually called, the command is handled in bot.js' client.on(Events.InteractionCreate...)
-	async execute(interaction) {
+	async execute(interaction: CommandInteraction) {
         interaction.reply({
             content: "Pong!",
             ephemeral:true,
