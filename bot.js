@@ -809,7 +809,7 @@ async function applyUpdatesToScoreboard(newMovieCollection, confirmationText, ms
 
     // Every 5 updates, dump the entire scoreboard into the archive
     var scoreboardNeedsArchive = true
-    const messages = await archiveChannel.messages.fetch({ limit: 5 }); // Check last 5 messages
+    const messages = await archiveChannel.messages.fetch({ limit: 10 }); // Check last 10 messages
     for( let message of messages ) {
         let content = message[1].content
         if (content.indexOf("Scoreboard updated: ") < 0) {
