@@ -1,9 +1,10 @@
-const { REST, Routes } = require('discord.js');
-const fs = require('node:fs');
-const path = require('node:path');
-require('dotenv').config();
+import { REST, Routes } from 'discord.js';
+import * as dotenv from 'dotenv';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const commands = [];
+dotenv.config();
+let commands: JSON[] = [];
 
 // // Grab all the command files from the commands directory you created earlier
 // const foldersPath = path.join(__dirname, 'commands');
@@ -25,18 +26,19 @@ const commands = [];
 // 	}
 // }
 
-const commandsPath = path.join(__dirname, 'commands');
+const commandsPath = path.join(import.meta.dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
-	const command = require(filePath);
-	// Set a new item in the Collection with the key as the command name and the value as the exported module
-	if ('data' in command && 'execute' in command) {
-        commands.push(command.data.toJSON());
-	} else {
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-	}
+	await import(filePath).then(command => {
+		// Set a new item in the Collection with the key as the command name and the value as the exported module
+		if ('data' in command.default && 'execute' in command.default) {
+			commands.push(command.default.data.toJSON());
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
+	});
 }
 
 // Construct and prepare an instance of the REST module
