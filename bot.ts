@@ -39,17 +39,17 @@ const scoreboardMessageIds = [
 ];
 
 const boffoBalanceIDsMap = new Map([ // User ID, balance post ID
-    ["410621256140980225", "1072279148246081637"], // Ben
-    ["206973395517177856", "1072279160908681286"], // John
-    ["424031474661064715", "1072279173168631839"], // Adam
-    ["206975381067137025", "1072279186032558110"], // Dylan F
-    ["701085890117632075", "1072279198665814056"], // Garrett
-    ["282597947064057856", "1072279211437465640"], // Lena
-    ["281984105523183616", "1072279223840022568"], // Nathaniel
-    ["746882782596431872", "1072279236355833917"], // Maren
-    ["206968933725503488", "1072279248938746017"], // Joe
-    ["209463935009685506", "1072279261584576584"], // Ted
-    ["153288298255613953", "1149063892807450758"] // Dylan Landry
+    [process.env.benUserId ?? "",           "1072279148246081637"],
+    [process.env.johnUserId ?? "",          "1072279160908681286"],
+    [process.env.adamUserId ?? "",          "1072279173168631839"],
+    [process.env.dylanUserId ?? "",         "1072279186032558110"],
+    [process.env.garrettUserId ?? "",       "1072279198665814056"],
+    [process.env.lenaUserId ?? "",          "1072279211437465640"],
+    [process.env.kingNathanielUserId ?? "", "1072279223840022568"],
+    [process.env.marenUserId ?? "",         "1072279236355833917"],
+    [process.env.joeUserId ?? "",           "1072279248938746017"],
+    [process.env.tedUserId ?? "",           "1072279261584576584"],
+    [process.env.canadianDylanUserId ?? "", "1149063892807450758"]
 ]);
 
 let emoteOwnershipMap = new Map<string, Emote>();
@@ -105,7 +105,7 @@ async function initializeStore() { // Used for initializing or editing any templ
 
 async function initializeNewAccount() {
     const ledgerChannel = await client.channels.fetch(ledgerChannelId) as TextChannel;
-    const newUserId = '555555555555555555';
+    const newUserId = process.env.canadianDylanUserId;
 
     await ledgerChannel.send("**~The Bank of ₿offos~\n  ~Canadian Branch~**\n~~                                          ~~");
 
