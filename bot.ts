@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Client, Collection, Events, GatewayIntentBits, ButtonBuilder, ActionRowBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags, TextChannel, Message, GuildMember, ButtonComponent, LabelBuilder, ButtonInteraction, ChatInputCommandInteraction, VoiceChannel, User } from 'discord.js';
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildExpressions] });
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+dotenv.config();
 // const wait = require('util').promisify(setTimeout); // can use this to wait(1000) if need
 
 interface Emote {
