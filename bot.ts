@@ -20,18 +20,13 @@ const nonFaceEmotes = [
     "872580606339469404" // escape (leave server)
 ];
 
-const gunUserId = "938529523811627038";
-const benUserId = "410621256140980225";
-const lenaUserId = "282597947064057856";
-const joeUserId = "206968933725503488";
-const generalChannelId = "702142443608473602";
-const scoreboardChannelId = "712134924815040522";
-const scoreboardArchiveChannelId = "1246524630034808893";
-const ledgerChannelId = "1072168363129835560";
-const voiceChannelId = "702142443608473603";
-const emoteOwnershipMessageId = "1072279118944673872";
-const transactionHistoryMessageId = "1072279127291334767";
-const serverId = "702142442949967953";
+const generalChannelId = process.env.generalChannelId ?? "";
+const scoreboardChannelId = process.env.scoreboardChannelId ?? "";
+const scoreboardArchiveChannelId = process.env.scoreboardArchiveChannelId ?? "";
+const ledgerChannelId = process.env.ledgerChannelId ?? "";
+const voiceChannelId = process.env.voiceChannelId ?? "";
+const emoteOwnershipMessageId = process.env.emoteOwnershipMessageId ?? "";
+const transactionHistoryMessageId = process.env.transactionHistoryMessageId ?? "";
 
 const joeAttendanceCost = 50;
 
@@ -417,14 +412,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
         } else if (customId === "joeAttendsButton") {
             if (getBalanceForUser(userId) < joeAttendanceCost) {
-                sendToGeneralChannel(userDisplayName + " can't afford to be friends with <@" + joeUserId + ">");
+                sendToGeneralChannel(userDisplayName + " can't afford to be friends with <@" + process.env.joeUserId + ">");
                 return;
             }
-
-            let joeUser = interaction.guild?.members.cache.get(joeUserId) ?? (await interaction.guild?.members.fetch().then(serverMembers => { joeUser = serverMembers.get(joeUserId); }));
-            if (joeUser == null) { // If Joe is not in the cache
-                return;
-            }
+            const joeUserId = process.env.joeUserId;
+            if (!joeUserId) { return; }
+            let joeUser = interaction.guild?.members.cache.get(joeUserId) ?? (await interaction.guild?.members.fetch().then(serverMembers => { joeUser = serverMembers.get(joeUserId); })); // If the user is not cached, try to fetch it
+            if (!joeUser) { return; }
             const joeDisplayName = joeUser.displayName
 
             const joeConfirmButton = new ButtonBuilder()
@@ -581,13 +575,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 client.on('messageCreate', async (msg) => {
     if (msg.content.charAt(0) != '~' &&
-        (msg.author.id != gunUserId || msg.content.search("acquires") < 0)) {
+        (msg.author.id != process.env.gunUserId || msg.content.search("acquires") < 0)) {
         await checkForEmotes(msg);
         return;
     }
     
     if (msg.content.startsWith("~delete")) {
-        if (msg.author.id != lenaUserId && msg.author.id != benUserId) {
+        if (msg.author.id != process.env.lenaUserId && msg.author.id != process.env.benUserId) {
             return;
         }
         if (msg.reference && msg.reference.messageId) {
@@ -720,7 +714,7 @@ async function addMovieToScoreboard(newMovieNumber: number, newMovieTitle: strin
 
     // If Ben has added something to the scoreboard, everyone in voice gets their Boffo allowance
     let membersList = "";
-    if (userId == benUserId) {
+    if (userId == process.env.benUserId) {
         membersList = await grantAllowance();
     }
     let confirmationText = "";
@@ -856,7 +850,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             if (currentTimestamp - message[1].createdTimestamp > 4 * 60 * 60 * 1000) { // Check last four hours
                 break;
             }
-            if (message[1].author.id === gunUserId && message[1].content.startsWith(goneLiveMessageText)) {
+            if (message[1].author.id === process.env.gunUserId && message[1].content.startsWith(goneLiveMessageText)) {
                 return;
             }
         }
@@ -941,8 +935,8 @@ function shoot(target: GuildMember, shooter: GuildMember, msg: ChatInputCommandI
     const targets = [target]; // Holdover from when it was possible to shoot multiple users at once
 
     targets.forEach( mentionedMember => {
-        if (mentionedMember.id == benUserId || mentionedMember.id == gunUserId || shooterBalance < cost) {
-          if (shooter.id == benUserId || shooter.id == gunUserId) {
+        if (mentionedMember.id == process.env.benUserId || mentionedMember.id == process.env.gunUserId || shooterBalance < cost) {
+          if (shooter.id == process.env.benUserId || shooter.id == process.env.gunUserId) {
                 return;
             } else {
                 shooter.timeout(timeoutDuration * 2);
@@ -1062,7 +1056,7 @@ function tip(fromUser: GuildMember, toUser: GuildMember, amountToSend: number, m
 }
 
 function bonus(fromUserId: string, toUser: GuildMember, amountToSend: number, msg: ChatInputCommandInteraction) {
-    if (fromUserId != lenaUserId && fromUserId != benUserId) {
+    if (fromUserId != process.env.lenaUserId && fromUserId != process.env.benUserId) {
         const member = msg.member as GuildMember;
         shoot(member, member, msg, 15 * 1000, 0);
         return;
@@ -1085,7 +1079,7 @@ function bid(biddingUser: GuildMember, emoteToBuy: string, bidAmount: number, ms
     if (emoteToBuy == "") {
         return;
     } else if (emoteToBuy == gunEmote || emoteToBuy == gunEmote2) {
-        if (biddingUser.id != benUserId) {
+        if (biddingUser.id != process.env.benUserId) {
             msg.reply("~shoot");
         }
         return;
@@ -1095,7 +1089,7 @@ function bid(biddingUser: GuildMember, emoteToBuy: string, bidAmount: number, ms
 
     let serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
     if (serverEmote == null || !serverEmote.available) {
-        if (biddingUser.id != benUserId) {
+        if (biddingUser.id != process.env.benUserId) {
             msg.reply("~shoot");
         }
         return;
