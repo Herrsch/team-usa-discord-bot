@@ -520,14 +520,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
         } else if (interaction.commandName == "shoot") {
             let target = interaction.guild?.members.cache.get(interaction.options?.getUser("target")?.id ?? '')
             if (target) {
-                shoot(target, member, interaction, 15 * 1000, 50)
+                shoot(target, member, interaction, 15 * 1000, 20)
             }
             return;
 
         } else if (interaction.commandName == "kill") {
             let target = interaction.guild?.members.cache.get(interaction.options?.getUser("target")?.id ?? '')
             if (target) {
-                shoot(target, interaction.member as GuildMember, interaction, 60 * 1000, 100)
+                shoot(target, interaction.member as GuildMember, interaction, 60 * 1000, 40)
             }
             return;
 
