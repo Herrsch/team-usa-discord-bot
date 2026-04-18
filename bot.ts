@@ -379,18 +379,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 return;
             }
 
-
             const vetoConfirmButton = new ButtonBuilder()
                 .setCustomId("vetoConfirmButton")
                 .setLabel("Yes")
                 .setStyle(ButtonStyle.Danger);
-
-            /* // This works but I don't actually like it in practice
-            const vetoConfirmWithShootButton = new ButtonBuilder()
-                .setCustomId("vetoConfirmWithShootButton")
-                .setLabel("Yes, and shoot @everyone")
-                .setStyle(ButtonStyle.Danger);
-            */
 
             const vetoCancelButton = new ButtonBuilder()
                 .setCustomId("vetoCancelButton")
@@ -408,25 +400,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
             try {
                 const confirmation = await response.resource?.message?.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 }) as ButtonInteraction;
-
-                if ((confirmation.customId === 'vetoConfirmButton' || confirmation.customId === 'vetoConfirmWithShootButton') && getBalanceForUser(userId) >= 300) {
+                
+                if (confirmation.customId === 'vetoConfirmButton' && getBalanceForUser(userId) >= 300) {
                     addToBalanceForUserId(userId, -300);
                     await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + (Date.now() / 1000 + 10).toString + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
                     addToTransactionHistory("<@"+userId+"> paid ₿300 to veto this week's movie.");
 
                     await sendToGeneralChannel("<@" + userId + "> has paid ₿300 to veto this week's movie!");
-
-                    if (confirmation.customId === 'vetoConfirmWithShootButton') {
-                        const guild = await client.guilds.fetch(serverId);
-                        let serverMembers = await guild.members.fetch();
-                        // Filter out Ben, Gun and the user that vetoed
-                        serverMembers = serverMembers.filter(member => member.id != benUserId && member.id != gunUserId && member.id != userId);
-                        let serverMemberIds = serverMembers.map(member => member.id);
-
-                        // Shoot everyone on the server
-                        await sendToGeneralChannel("~shoot <@" + serverMemberIds.join("> <@") + ">");
-                    }
                     
                 } else if (confirmation.customId === 'vetoCancelButton') {
                     await confirmation.update({ content: 'Veto cancelled.', components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 10000)});
