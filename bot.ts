@@ -133,10 +133,10 @@ async function initializeAccountBalances() {
     const users = Array.from(boffoBalanceIDsMap.keys());
     for (let i = 0; i < users.length; i++) {
         const userBalanceMessageId = boffoBalanceIDsMap.get(users[i]);
-        if (userBalanceMessageId == null) { continue; }
+        if (!userBalanceMessageId) { continue; }
         const message = await ledgerChannel.messages.fetch(userBalanceMessageId);
         const balanceNumber = message.content.substring(1).match(/\d/g)?.join("");
-        if (balanceNumber != null) {
+        if (balanceNumber) {
             accountBalancesMap.set(users[i], parseInt(balanceNumber));
         }
     };
@@ -157,7 +157,7 @@ async function initializeEmoteOwnership() {
 
         const emotes = thisOwnershipLine.match(/<:.+?:\d+>/g);
 
-        if (emotes == null) {
+        if (!emotes) {
             continue;
         }
         for (let j = 0; j < emotes.length; j++) {
@@ -295,7 +295,7 @@ async function trackInterestInTransactionHistory(userId: string, emote: string) 
 
 async function checkForEmotes(message: Message) {
     const emotes = message.content.match(/<:.+?:\d+>/g);
-    if (emotes == null) {
+    if (!emotes) {
         return;
     }
     
@@ -396,7 +396,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
             try {
                 const confirmation = await response.resource?.message?.awaitMessageComponent({ filter: i => i.user.id === interaction.user.id, time: 60000 }) as ButtonInteraction;
-                
+
                 if (confirmation.customId === 'vetoConfirmButton' && getBalanceForUser(userId) >= 300) {
                     addToBalanceForUserId(userId, -300);
                     await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + (Date.now() / 1000 + 10).toString + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
@@ -841,7 +841,7 @@ async function applyUpdatesToScoreboard(newMovieCollection: string[], confirmati
 }
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    if (newState.streaming && newState.channel != null && !oldState.streaming) {
+    if (newState.streaming && newState.channel && !oldState.streaming) {
         const currentTimestamp = Date.now();
         const generalChannel = await client.channels.fetch(generalChannelId) as TextChannel;
         const messages = await generalChannel.messages.fetch({ limit: 15 }); // Check last 15 messages
@@ -869,7 +869,7 @@ client.on(Events.GuildEmojiDelete, async (emoji) => {
         
         // Post the emote's value, and the previous owner
         const emoteProperties = emoteOwnershipMap.get(emoteFullName);
-        if (emoteProperties == null) { return; }
+        if (!emoteProperties) { return; }
         const generalChannel = await client.channels.fetch(generalChannelId) as TextChannel;
         generalChannel.send("<@" + emoteProperties.owner + "> lost ₿" + emoteProperties.value + " from the removal of :" + emoteName + ":!");
         
@@ -911,7 +911,7 @@ async function giveEmoteOwnerRoyalties(emoteId: string, userId: string) {
     }
 
     const emoteOwner = emoteOwnershipMap.get(emoteId)?.owner;
-    if (emoteOwner == null || emoteOwner == userId) {
+    if (!emoteOwner || emoteOwner == userId) {
         return;
     } else {
         addToBalanceForUserId(emoteOwner, 1);
@@ -1089,7 +1089,7 @@ function bid(biddingUser: GuildMember, emoteToBuy: string, bidAmount: number, ms
     emoteId = emoteId.substring(emoteId.search(":") + 1, emoteId.search(">"));
 
     let serverEmote = client.emojis.cache.find(emoji => emoji.id == emoteId);
-    if (serverEmote == null || !serverEmote.available) {
+    if (!serverEmote || !serverEmote.available) {
         if (biddingUser.id != process.env.benUserId) {
             msg.reply("~shoot");
         }
@@ -1131,7 +1131,7 @@ function bid(biddingUser: GuildMember, emoteToBuy: string, bidAmount: number, ms
     // charge bidder
     addToBalanceForUserId(biddingUser.id, -bidAmount);
     // refund old owner
-    if (previousOwner != null) {
+    if (previousOwner) {
         msg.reply(biddingUser.displayName + " acquires " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + "!");
         addToTransactionHistory(biddingUser.displayName + " acquired " + emoteToBuy + " from <@" + previousOwner + "> for ₿" + bidAmount + ".");
     } else {
