@@ -248,7 +248,7 @@ async function addToTransactionHistory(transactionToAdd: string) {
     const transactionHistoryMessage = await ledgerChannel.messages.fetch(transactionHistoryMessageId);
 
     // Add timestamp to the new transaction
-    transactionToAdd = "<t:" + (Date.now() / 1000).toString + ":f> " + transactionToAdd;
+    transactionToAdd = "<t:" + Math.round(Date.now() / 1000).toString() + ":f> " + transactionToAdd;
 
     recentTransactionsArray.pop();
     recentTransactionsArray.splice(1, 0, transactionToAdd);
@@ -268,7 +268,7 @@ async function trackInterestInTransactionHistory(userId: string, emote: string) 
         let thisTransactionText = recentTransactionsArray[i];
 
         // Update timestamp
-        thisTransactionText = "<t:" + (Date.now() / 1000).toString + thisTransactionText.substring(thisTransactionText.search(":f>"));
+        thisTransactionText = "<t:" + Math.round(Date.now() / 1000).toString() + thisTransactionText.substring(thisTransactionText.search(":f>"));
 
         if (thisTransactionText.search(emote) < 0) {
             let emotePosition = thisTransactionText.search("<:");
@@ -399,7 +399,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
                 if (confirmation.customId === 'vetoConfirmButton' && getBalanceForUser(userId) >= 300) {
                     addToBalanceForUserId(userId, -300);
-                    await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + (Date.now() / 1000 + 10).toString + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+                    await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + Math.round(Date.now() / 1000 + 10).toString() + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
                     addToTransactionHistory("<@"+userId+"> paid ₿300 to veto this week's movie.");
 
@@ -447,7 +447,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 if (confirmation.customId === 'joeConfirmButton' && getBalanceForUser(userId) >= joeAttendanceCost) {
                     addToBalanceForUserId(userId, -joeAttendanceCost);
                     addToBalanceForUserId(joeUserId, joeAttendanceCost)
-                    await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + (Date.now() / 1000 + 10).toString + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+                    await confirmation.update({ content: "Purchase successful! This message will auto delete <t:" + Math.round(Date.now() / 1000 + 10).toString() + ":R>", components: [] }).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
 
                     addToTransactionHistory("<@"+userId+"> paid ₿" + joeAttendanceCost + " to hang out with <@" + joeUserId + ">. " + joeDisplayName + " receives ₿5.");
 
@@ -468,14 +468,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
             addToBalanceForUserId(userId, -100);
             sendToGeneralChannel("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel!");
             addToTransactionHistory("<@"+userId+"> paid ₿100 to add " + movieTitle + " to the wheel.");
-            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + (Date.now() / 1000 + 10).toString + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + Math.round(Date.now() / 1000 + 10).toString() + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         } else if (interaction.customId == "chooseNextMovieModal") {
             const movieTitle = interaction.fields.getTextInputValue("chooseNextMovieTextInput");
 
             addToBalanceForUserId(userId, -200);
             sendToGeneralChannel("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night!");
             addToTransactionHistory("<@"+userId+"> paid ₿200 for us to watch " + movieTitle + " next movie night.");
-            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + (Date.now() / 1000 + 10).toString + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
+            interaction.reply({content:"Purchase successful! This message will auto delete <t:" + Math.round(Date.now() / 1000 + 10).toString() + ":R>", flags: MessageFlags.Ephemeral}).then(confirmationMessage => {setTimeout(() => confirmationMessage.delete(), 9500)});
         }
     } else if (interaction.isChatInputCommand()) {
         if (!chatCommands.has(interaction.commandName)) {
