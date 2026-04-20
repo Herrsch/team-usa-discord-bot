@@ -1,5 +1,5 @@
 # The Bank of Boffo Discord Bot
-This is a discord bot that I built for my personal server with my friends. It's partly been an exercise in learning Javascript and Typescript, but it's mostly a vector for us to maintain ongoing elaborate bits. The bot's functionality includes:
+This is a discord bot that I built for my personal server with my friends. It's partly been a personal exercise in learning Javascript and Typescript, but it's mostly a vector for us to maintain ongoing elaborate bits. This bot is not designed to be plugged into anyone else's server, the repo is mostly here to serve as a project record. The bot's functionality includes:
 
 1. [Go Live Notifications](#go-live-notifications)
 2. [Shoot](#shoot)
