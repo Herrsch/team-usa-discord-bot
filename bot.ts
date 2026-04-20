@@ -65,10 +65,10 @@ for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 	import(filePath).then(command => {
 	// Set a new item in the Collection with the key as the command name and the value as the exported module
-	if ('data' in command.default && 'execute' in command.default) {
+	if ('data' in command.default) {
 		chatCommands.set(command.default.data.name, command.default);
 	} else {
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		console.log(`[WARNING] The command at ${filePath} is missing a required "data" property.`);
 	}
     });
 }

@@ -12,11 +12,4 @@ export default {
             option.setName('amount')
                 .setDescription('Number of Boffos you\'re bidding. Must be higher than the current owner\'s bid.')
                 .setRequired(true)),
-    // This is not actually called, the command is handled in bot.ts' client.on(Events.InteractionCreate...)
-	async execute(interaction: CommandInteraction) {
-        interaction.reply({
-            content: "Pong!",
-            ephemeral:true,
-        });
-	},
 };
